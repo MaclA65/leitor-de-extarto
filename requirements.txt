@@ -1,0 +1,5 @@
+Flask
+pymupdf
+pandas
+openpyxl
+gunicorn
