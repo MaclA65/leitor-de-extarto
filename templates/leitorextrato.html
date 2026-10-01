@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Leitor de Extrato</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h1>Leitor de Extrato</h1>
+
+        <p class="subtitulo">
+            Leitura automática de extrato bancário
+        </p>
+
+        <div class="banco">
+            <span>Banco</span>
+            <strong>ITAÚ</strong>
+        </div>
+
+        <form
+            action="/processar"
+            method="POST"
+            enctype="multipart/form-data"
+            id="formExtrato"
+        >
+
+            <div class="upload-box" id="uploadBox">
+
+                <div class="icone">
+                    ↑
+                </div>
+
+                <h2>Arraste seu extrato aqui</h2>
+
+                <p>ou selecione o arquivo</p>
+
+                <input
+                    type="file"
+                    id="arquivo"
+                    name="arquivo"
+                    accept=".pdf"
+                    hidden
+                    required
+                >
+
+                <button
+                    type="button"
+                    id="selecionar"
+                >
+                    Selecionar PDF
+                </button>
+
+                <p id="nomeArquivo"></p>
+
+            </div>
+
+            <button
+                type="submit"
+                class="processar"
+                id="processar"
+                disabled
+            >
+                Processar Extrato
+            </button>
+
+        </form>
+
+        <div
+            class="resultado"
+            id="resultado"
+        >
+        </div>
+
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+
+</body>
+
+</html>

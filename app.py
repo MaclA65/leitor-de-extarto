@@ -31,6 +31,14 @@ def inicio():
     return render_template("index.html")
 
 
+@app.route("/empresa/<nome>")
+def empresa(nome):
+    return render_template(
+        "leitorextrato.html",
+        empresa=nome
+    )
+
+
 @app.route("/processar", methods=["POST"])
 def processar():
 

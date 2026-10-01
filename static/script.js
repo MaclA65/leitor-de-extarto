@@ -12,9 +12,7 @@ selecionar.addEventListener("click", () => {
 
 
 arquivo.addEventListener("change", () => {
-
     if (arquivo.files.length > 0) {
-
         const file = arquivo.files[0];
 
         nomeArquivo.textContent =
@@ -22,12 +20,10 @@ arquivo.addEventListener("change", () => {
 
         processar.disabled = false;
     }
-
 });
 
 
 uploadBox.addEventListener("dragover", (event) => {
-
     event.preventDefault();
 
     uploadBox.classList.add("dragover");
@@ -35,13 +31,11 @@ uploadBox.addEventListener("dragover", (event) => {
 
 
 uploadBox.addEventListener("dragleave", () => {
-
     uploadBox.classList.remove("dragover");
 });
 
 
 uploadBox.addEventListener("drop", (event) => {
-
     event.preventDefault();
 
     uploadBox.classList.remove("dragover");
@@ -49,7 +43,6 @@ uploadBox.addEventListener("drop", (event) => {
     const files = event.dataTransfer.files;
 
     if (files.length > 0) {
-
         arquivo.files = files;
 
         nomeArquivo.textContent =
@@ -57,13 +50,12 @@ uploadBox.addEventListener("drop", (event) => {
 
         processar.disabled = false;
     }
-
 });
 
 
 processar.addEventListener("click", () => {
-
-    resultado.textContent =
-        "Extrato pronto para processamento.";
-
+    if (resultado) {
+        resultado.textContent =
+            "Processando extrato...";
+    }
 });
