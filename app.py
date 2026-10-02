@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, send_file
 from leitoritau import ler_extrato_itau
+from itau_modelo2 import ler_itau_modelo2
 import os
 
 app = Flask(__name__)
@@ -43,9 +44,13 @@ def empresa(nome):
 def processar():
 
     arquivo = request.files.get("arquivo")
+    empresa = request.form.get("empresa")
 
     if not arquivo:
         return "Nenhum arquivo enviado."
+
+    if not empresa:
+        return "Empresa não identificada."
 
     caminho_pdf = os.path.join(
         PASTA_UPLOAD,
@@ -54,14 +59,43 @@ def processar():
 
     arquivo.save(caminho_pdf)
 
-    df = ler_extrato_itau(caminho_pdf)
+    # ESCOLHE QUAL LEITOR USAR
+    if empresa == "serva":
 
-    df["Débito"] = df["Débito"].apply(formatar_br)
-    df["Crédito"] = df["Crédito"].apply(formatar_br)
+        df = ler_extrato_itau(
+            caminho_pdf
+        )
+
+    elif empresa == "cibi":
+
+        df = ler_itau_modelo2(
+            caminho_pdf
+        )
+
+    else:
+
+        return f"Leitor ainda não configurado para: {empresa}"
+
+    # FORMATA DÉBITO
+    if "Débito" in df.columns:
+        df["Débito"] = (
+            df["Débito"]
+            .apply(formatar_br)
+        )
+
+    # FORMATA CRÉDITO
+    if "Crédito" in df.columns:
+        df["Crédito"] = (
+            df["Crédito"]
+            .apply(formatar_br)
+        )
+
+    # NOME DO CSV
+    nome_saida = f"resultado_{empresa}.csv"
 
     caminho_csv = os.path.join(
         PASTA_SAIDA,
-        "resultado_itau.csv"
+        nome_saida
     )
 
     df.to_csv(

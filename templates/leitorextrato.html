@@ -7,7 +7,10 @@
 
     <title>Leitor de Extrato</title>
 
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
 </head>
 
 <body>
@@ -32,15 +35,35 @@
             id="formExtrato"
         >
 
-            <div class="upload-box" id="uploadBox">
+            <!--
+                Guarda qual empresa foi escolhida
+                na tela inicial.
+                
+                Exemplo:
+                CIBI -> empresa = cibi
+            -->
+            <input
+                type="hidden"
+                name="empresa"
+                value="{{ empresa }}"
+            >
+
+            <div
+                class="upload-box"
+                id="uploadBox"
+            >
 
                 <div class="icone">
                     ↑
                 </div>
 
-                <h2>Arraste seu extrato aqui</h2>
+                <h2>
+                    Arraste seu extrato aqui
+                </h2>
 
-                <p>ou selecione o arquivo</p>
+                <p>
+                    ou selecione o arquivo
+                </p>
 
                 <input
                     type="file"
@@ -81,7 +104,9 @@
 
     </div>
 
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script
+        src="{{ url_for('static', filename='script.js') }}"
+    ></script>
 
 </body>
 
