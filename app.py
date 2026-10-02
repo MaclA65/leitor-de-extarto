@@ -1,18 +1,23 @@
 from flask import Flask, render_template, request, send_file
 from leitoritau import ler_extrato_itau
 from itau_modelo2 import ler_itau_modelo2
+from bradesco_unificado import ler_bradesco_unificado
 import os
+
 
 app = Flask(__name__)
 
+
 PASTA_UPLOAD = "uploads"
 PASTA_SAIDA = "saidas"
+
 
 os.makedirs(PASTA_UPLOAD, exist_ok=True)
 os.makedirs(PASTA_SAIDA, exist_ok=True)
 
 
 def formatar_br(valor):
+
     if valor is None:
         return ""
 
@@ -29,11 +34,15 @@ def formatar_br(valor):
 
 @app.route("/")
 def inicio():
-    return render_template("index.html")
+
+    return render_template(
+        "index.html"
+    )
 
 
 @app.route("/empresa/<nome>")
 def empresa(nome):
+
     return render_template(
         "leitorextrato.html",
         empresa=nome
@@ -43,14 +52,25 @@ def empresa(nome):
 @app.route("/processar", methods=["POST"])
 def processar():
 
+    # =====================================
+    # RECEBE O PDF E A EMPRESA
+    # =====================================
+
     arquivo = request.files.get("arquivo")
     empresa = request.form.get("empresa")
+
 
     if not arquivo:
         return "Nenhum arquivo enviado."
 
+
     if not empresa:
         return "Empresa não identificada."
+
+
+    # =====================================
+    # SALVA O PDF
+    # =====================================
 
     caminho_pdf = os.path.join(
         PASTA_UPLOAD,
@@ -59,12 +79,17 @@ def processar():
 
     arquivo.save(caminho_pdf)
 
-    # ESCOLHE QUAL LEITOR USAR
+
+    # =====================================
+    # ESCOLHE O LEITOR CORRETO
+    # =====================================
+
     if empresa == "serva":
 
         df = ler_extrato_itau(
             caminho_pdf
         )
+
 
     elif empresa == "cibi":
 
@@ -72,31 +97,64 @@ def processar():
             caminho_pdf
         )
 
+
+    elif empresa == "ds":
+
+        df = ler_bradesco_unificado(
+            caminho_pdf
+        )
+
+
     else:
 
-        return f"Leitor ainda não configurado para: {empresa}"
+        return (
+            f"Leitor ainda não configurado para: "
+            f"{empresa}"
+        )
 
+
+    # =====================================
     # FORMATA DÉBITO
+    # =====================================
+
     if "Débito" in df.columns:
+
         df["Débito"] = (
             df["Débito"]
             .apply(formatar_br)
         )
 
+
+    # =====================================
     # FORMATA CRÉDITO
+    # =====================================
+
     if "Crédito" in df.columns:
+
         df["Crédito"] = (
             df["Crédito"]
             .apply(formatar_br)
         )
 
-    # NOME DO CSV
-    nome_saida = f"resultado_{empresa}.csv"
+
+    # =====================================
+    # NOME DO ARQUIVO DE SAÍDA
+    # =====================================
+
+    nome_saida = (
+        f"resultado_{empresa}.csv"
+    )
+
 
     caminho_csv = os.path.join(
         PASTA_SAIDA,
         nome_saida
     )
+
+
+    # =====================================
+    # GERA O CSV
+    # =====================================
 
     df.to_csv(
         caminho_csv,
@@ -105,6 +163,11 @@ def processar():
         encoding="utf-8-sig"
     )
 
+
+    # =====================================
+    # BAIXA O CSV
+    # =====================================
+
     return send_file(
         caminho_csv,
         as_attachment=True
@@ -112,4 +175,5 @@ def processar():
 
 
 if __name__ == "__main__":
+
     app.run()
