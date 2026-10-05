@@ -43,12 +43,14 @@ def ler_bradesco_unificado(caminho_pdf):
     if ano is None:
         ano = str(datetime.now().year)
 
+
     # =========================================
-    # CONTROLE DA ÁREA QUE VAMOS LER
+    # CONTROLE DA LEITURA
     # =========================================
 
     iniciou_movimentacao = False
     terminou_movimentacao = False
+
 
     # =========================================
     # PROCESSA AS PÁGINAS
@@ -62,6 +64,7 @@ def ler_bradesco_unificado(caminho_pdf):
         palavras = pagina.get_text("words")
 
         linhas = {}
+
 
         # =========================================
         # AGRUPA AS PALAVRAS POR LINHA
@@ -91,6 +94,7 @@ def ler_bradesco_unificado(caminho_pdf):
                 (x0, texto)
             )
 
+
         # =========================================
         # ORDENA AS LINHAS
         # =========================================
@@ -100,8 +104,9 @@ def ler_bradesco_unificado(caminho_pdf):
             key=lambda item: item[0]
         )
 
+
         # =========================================
-        # ANALISA CADA LINHA
+        # ANALISA AS LINHAS
         # =========================================
 
         for y, palavras_linha in linhas_ordenadas:
@@ -118,8 +123,9 @@ def ler_bradesco_unificado(caminho_pdf):
 
             texto_upper = texto_linha.upper()
 
+
             # =========================================
-            # COMEÇA SOMENTE NA MOVIMENTAÇÃO
+            # COMEÇA NA MOVIMENTAÇÃO
             # =========================================
 
             if "DEMONSTRATIVO DA MOVIMENTAÇÃO" in texto_upper:
@@ -127,18 +133,37 @@ def ler_bradesco_unificado(caminho_pdf):
                 iniciou_movimentacao = True
                 continue
 
-            # Antes dessa seção, ignora tudo
+
             if not iniciou_movimentacao:
                 continue
 
+
             # =========================================
-            # PARA QUANDO CHEGAR EM INVESTIMENTOS
+            # PARA ANTES DA ÁREA DE INVESTIMENTOS
             # =========================================
 
-            if texto_upper.strip() == "INVESTIMENTOS":
+            sinais_investimento = [
+                "INVESTIMENTOS",
+                "CDB BRADESCO",
+                "INVEST FÁCIL BRADESCO",
+                "INVEST FACIL BRADESCO",
+                "DATA APLICAÇÃO",
+                "DATA APLICACAO",
+                "VALOR PRINCIPAL",
+                "DATA VENCIMENTO",
+                "RESGATE BRUTO",
+                "RENDA TRIBUTÁVEL",
+                "RENDA TRIBUTAVEL"
+            ]
+
+            if any(
+                sinal in texto_upper
+                for sinal in sinais_investimento
+            ):
 
                 terminou_movimentacao = True
                 break
+
 
             # =========================================
             # IGNORA CABEÇALHOS
@@ -152,14 +177,16 @@ def ler_bradesco_unificado(caminho_pdf):
 
                 continue
 
+
             # =========================================
-            # SEPARA AS COLUNAS PELA POSIÇÃO NO PDF
+            # SEPARA AS COLUNAS
             # =========================================
 
             coluna_data = []
             coluna_historico = []
             coluna_credito = []
             coluna_debito = []
+
 
             for x, texto in palavras_linha:
 
@@ -173,9 +200,9 @@ def ler_bradesco_unificado(caminho_pdf):
 
                     coluna_historico.append(texto)
 
-                # DOCUMENTO
-                # entre 270 e 330
-                # não precisamos salvar
+                # DOCUMENTO:
+                # 270 até 330
+                # não precisamos
 
                 # CRÉDITO
                 elif 330 <= x < 425:
@@ -187,11 +214,13 @@ def ler_bradesco_unificado(caminho_pdf):
 
                     coluna_debito.append(texto)
 
-                # acima de 515 é saldo
-                # não precisamos
+                # SALDO:
+                # acima de 515
+                # ignorado
+
 
             # =========================================
-            # MONTA OS TEXTOS
+            # MONTA OS CAMPOS
             # =========================================
 
             data_texto = " ".join(
@@ -210,8 +239,9 @@ def ler_bradesco_unificado(caminho_pdf):
                 coluna_debito
             ).strip()
 
+
             # =========================================
-            # ATUALIZA DATA
+            # DATA
             # =========================================
 
             if re.fullmatch(
@@ -223,8 +253,9 @@ def ler_bradesco_unificado(caminho_pdf):
                     f"{data_texto}/{ano}"
                 )
 
+
             # =========================================
-            # IGNORA LINHAS QUE NÃO QUEREMOS
+            # IGNORA SALDOS E TOTAIS
             # =========================================
 
             historico_upper = historico.upper()
@@ -235,8 +266,9 @@ def ler_bradesco_unificado(caminho_pdf):
             if historico_upper == "TOTAL":
                 continue
 
+
             # =========================================
-            # CONFERE CRÉDITO
+            # IDENTIFICA CRÉDITO
             # =========================================
 
             tem_credito = bool(
@@ -246,8 +278,9 @@ def ler_bradesco_unificado(caminho_pdf):
                 )
             )
 
+
             # =========================================
-            # CONFERE DÉBITO
+            # IDENTIFICA DÉBITO
             # =========================================
 
             tem_debito = bool(
@@ -257,8 +290,9 @@ def ler_bradesco_unificado(caminho_pdf):
                 )
             )
 
+
             # =========================================
-            # LINHA PRINCIPAL DE MOVIMENTAÇÃO
+            # MOVIMENTAÇÃO PRINCIPAL
             # =========================================
 
             if historico and (
@@ -289,8 +323,9 @@ def ler_bradesco_unificado(caminho_pdf):
 
                 continue
 
+
             # =========================================
-            # LINHAS COMPLEMENTARES DO HISTÓRICO
+            # COMPLEMENTO DO HISTÓRICO
             # =========================================
 
             if (
@@ -316,10 +351,12 @@ def ler_bradesco_unificado(caminho_pdf):
                         " " + historico
                     )
 
+
     documento.close()
 
+
     # =========================================
-    # MONTA O DATAFRAME FINAL
+    # DATAFRAME FINAL
     # =========================================
 
     df = pd.DataFrame(

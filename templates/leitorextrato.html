@@ -25,7 +25,6 @@
 
         <div class="banco">
             <span>Banco</span>
-            <strong>ITAÚ</strong>
         </div>
 
         <form
@@ -35,13 +34,6 @@
             id="formExtrato"
         >
 
-            <!--
-                Guarda qual empresa foi escolhida
-                na tela inicial.
-                
-                Exemplo:
-                CIBI -> empresa = cibi
-            -->
             <input
                 type="hidden"
                 name="empresa"
@@ -69,7 +61,7 @@
                     type="file"
                     id="arquivo"
                     name="arquivo"
-                    accept=".pdf"
+                    accept=".pdf,.xls,.xlsx"
                     hidden
                     required
                 >
@@ -78,7 +70,7 @@
                     type="button"
                     id="selecionar"
                 >
-                    Selecionar PDF
+                    Selecionar Arquivo
                 </button>
 
                 <p id="nomeArquivo"></p>
@@ -89,10 +81,13 @@
                 type="submit"
                 class="processar"
                 id="processar"
+                name="modo"
+                value="normal"
                 disabled
             >
                 Processar Extrato
             </button>
+
 
         </form>
 
