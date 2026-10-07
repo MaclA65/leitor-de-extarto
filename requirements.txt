@@ -3,3 +3,5 @@ pymupdf
 pandas
 openpyxl
 gunicorn
+xlrd
+openai
