@@ -7,7 +7,6 @@ from pathlib import Path
 from openai import OpenAI
 
 
-client = OpenAI()
 
 
 def recortar_paginas(caminho_pdf):
@@ -67,6 +66,7 @@ def imagem_para_base64(caminho_imagem):
 
 
 def ler_pagina_com_ia(caminho_imagem):
+    client = OpenAI()
 
     imagem_base64 = imagem_para_base64(
         caminho_imagem
