@@ -8,6 +8,7 @@ from bradesco_unificado import ler_bradesco_unificado
 from alooh_excel import ler_alooh_excel
 
 import os
+import shutil
 
 
 app = Flask(__name__)
@@ -15,6 +16,7 @@ app = Flask(__name__)
 
 PASTA_UPLOAD = "uploads"
 PASTA_SAIDA = "saidas"
+PASTA_RECORTES = "recortes"
 
 
 os.makedirs(
@@ -40,12 +42,49 @@ def formatar_br(valor):
     if str(valor) == "nan":
         return ""
 
+    if str(valor).strip() == "":
+        return ""
+
+    try:
+        valor = float(valor)
+
+    except (ValueError, TypeError):
+        return str(valor)
+
     return (
         f"{valor:,.2f}"
         .replace(",", "X")
         .replace(".", ",")
         .replace("X", ".")
     )
+
+
+# =====================================
+# APAGA RECORTES DO OCR
+# =====================================
+
+def apagar_recortes():
+
+    if os.path.exists(
+        PASTA_RECORTES
+    ):
+
+        try:
+
+            shutil.rmtree(
+                PASTA_RECORTES
+            )
+
+            print(
+                "RECORTES APAGADOS."
+            )
+
+        except Exception as erro:
+
+            print(
+                "ERRO AO APAGAR RECORTES:",
+                erro
+            )
 
 
 # =====================================
@@ -95,7 +134,6 @@ def processar():
         "empresa"
     )
 
-
     print(
         "EMPRESA RECEBIDA:",
         empresa
@@ -111,7 +149,6 @@ def processar():
         return (
             "Nenhum arquivo enviado."
         )
-
 
     if not empresa:
 
@@ -144,9 +181,28 @@ def processar():
             "USANDO LEITURA INTELIGENTE"
         )
 
-        df = ler_extrato_inteligente(
-            caminho_arquivo
-        )
+        try:
+
+            df = ler_extrato_inteligente(
+                caminho_arquivo
+            )
+
+        except Exception as erro:
+
+            # Se der erro durante o OCR,
+            # também apaga os recortes.
+
+            apagar_recortes()
+
+            print(
+                "ERRO NA LEITURA INTELIGENTE:",
+                erro
+            )
+
+            return (
+                "Erro durante a leitura inteligente: "
+                f"{erro}"
+            )
 
 
     # =====================================
@@ -254,31 +310,80 @@ def processar():
 
 
     # =====================================
-    # FORMATA DÉBITO
+    # VALIDA RESULTADO
     # =====================================
 
-    if "Débito" in df.columns:
+    if df is None:
 
-        df["Débito"] = (
-            df["Débito"]
-            .apply(
-                formatar_br
-            )
+        if empresa == "leitura_inteligente":
+            apagar_recortes()
+
+        return (
+            "O leitor não retornou "
+            "nenhum resultado."
+        )
+
+    if df.empty:
+
+        if empresa == "leitura_inteligente":
+            apagar_recortes()
+
+        return (
+            "Nenhum lançamento "
+            "foi encontrado."
         )
 
 
     # =====================================
-    # FORMATA CRÉDITO
+    # FORMATA DÉBITO E CRÉDITO
+    # SOMENTE NOS LEITORES NORMAIS
     # =====================================
 
-    if "Crédito" in df.columns:
+    if empresa != "leitura_inteligente":
 
-        df["Crédito"] = (
-            df["Crédito"]
-            .apply(
-                formatar_br
+        if "Débito" in df.columns:
+
+            df["Débito"] = (
+                df["Débito"]
+                .apply(
+                    formatar_br
+                )
             )
-        )
+
+        if "Crédito" in df.columns:
+
+            df["Crédito"] = (
+                df["Crédito"]
+                .apply(
+                    formatar_br
+                )
+            )
+
+
+    # =====================================
+    # ORGANIZA COLUNAS
+    # LEITURA INTELIGENTE
+    # =====================================
+
+    if empresa == "leitura_inteligente":
+
+        colunas_desejadas = [
+            "Data",
+            "Histórico",
+            "Crédito",
+            "Débito",
+            "Status"
+        ]
+
+        colunas_existentes = [
+            coluna
+            for coluna in colunas_desejadas
+            if coluna in df.columns
+        ]
+
+        df = df[
+            colunas_existentes
+        ].copy()
 
 
     # =====================================
@@ -287,8 +392,24 @@ def processar():
 
     if empresa == "leitura_inteligente":
 
+        # Exemplo:
+        #
+        # Extrato Itau Setembro.pdf
+        #
+        # vira:
+        #
+        # Extrato Itau Setembro.csv
+
+        nome_original = os.path.basename(
+            arquivo.filename
+        )
+
+        nome_sem_extensao = os.path.splitext(
+            nome_original
+        )[0]
+
         nome_saida = (
-            "LEITURA INTELIGENTE.csv"
+            f"{nome_sem_extensao}.csv"
         )
 
     else:
@@ -308,12 +429,44 @@ def processar():
     # GERA CSV
     # =====================================
 
-    df.to_csv(
-        caminho_csv,
-        index=False,
-        sep=";",
-        encoding="utf-8-sig"
-    )
+    try:
+
+        df.to_csv(
+            caminho_csv,
+            index=False,
+            sep=";",
+            encoding="utf-8-sig"
+        )
+
+    except PermissionError:
+
+        if empresa == "leitura_inteligente":
+            apagar_recortes()
+
+        return (
+            "O arquivo de saída está aberto. "
+            "Feche o arquivo no Excel "
+            "e tente novamente."
+        )
+
+    except Exception as erro:
+
+        if empresa == "leitura_inteligente":
+            apagar_recortes()
+
+        return (
+            "Erro ao gerar o CSV: "
+            f"{erro}"
+        )
+
+
+    # =====================================
+    # APAGA RECORTES DA LEITURA INTELIGENTE
+    # =====================================
+
+    if empresa == "leitura_inteligente":
+
+        apagar_recortes()
 
 
     # =====================================
