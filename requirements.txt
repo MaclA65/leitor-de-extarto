@@ -5,3 +5,5 @@ openpyxl
 gunicorn
 xlrd
 openai
+pytesseract
+Pillow
