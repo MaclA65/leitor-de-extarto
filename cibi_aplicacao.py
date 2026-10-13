@@ -2,12 +2,20 @@ import io
 import os
 import re
 
+# ============================================================
+# LIMITA O TESSERACT A 1 THREAD
+# IMPORTANTE PARA O RENDER
+# ============================================================
+
+os.environ["OMP_THREAD_LIMIT"] = "1"
+
 import pandas as pd
 import pymupdf
 import pytesseract
 
 from PIL import Image
 from pathlib import Path
+
 
 # ============================================================
 # TESSERACT WINDOWS
@@ -22,6 +30,16 @@ if CAMINHO_TESSERACT_WINDOWS.exists():
     pytesseract.pytesseract.tesseract_cmd = str(
         CAMINHO_TESSERACT_WINDOWS
     )
+
+
+# ============================================================
+# CONFIGURAÇÕES
+# ============================================================
+
+# Antes estava em 2x / 3x.
+# 1.35 reduz bastante memória.
+
+ESCALA_RENDER = 1.35
 
 
 # ============================================================
@@ -41,7 +59,7 @@ def normalizar_texto(texto):
 
 
 # ============================================================
-# LIMPA VALOR MONETÁRIO
+# LIMPA VALOR
 # ============================================================
 
 def limpar_valor(valor):
@@ -60,15 +78,13 @@ def limpar_valor(valor):
         .replace("R$", "")
     )
 
-    # --------------------------------------------------------
-    # ACEITA:
+    # ========================================================
+    # PADRÃO BRASILEIRO
     #
     # 495,88
     # 13.212,74
     # 600.296,66
-    # 0,14
-    # 19,86
-    # --------------------------------------------------------
+    # ========================================================
 
     resultado = re.search(
         r"\d{1,3}(?:\.\d{3})*,\d{2}|\d+,\d{2}",
@@ -79,11 +95,39 @@ def limpar_valor(valor):
 
         return resultado.group(0)
 
+
+    # ========================================================
+    # OCR PODE TROCAR VÍRGULA POR PONTO
+    #
+    # 495.88
+    # ========================================================
+
+    resultado = re.search(
+        r"\d+\.\d{2}",
+        texto
+    )
+
+    if resultado:
+
+        valor = resultado.group(0)
+
+        inteiro, centavos = valor.rsplit(
+            ".",
+            1
+        )
+
+        return (
+            inteiro
+            + ","
+            + centavos
+        )
+
+
     return ""
 
 
 # ============================================================
-# FORMATA IOF / IRRF
+# FORMATA IMPOSTO
 # ============================================================
 
 def formatar_imposto(valor):
@@ -93,16 +137,8 @@ def formatar_imposto(valor):
     )
 
     if not valor:
-        return ""
 
-    # --------------------------------------------------------
-    # PADRÃO DO CSV:
-    #
-    # 0,00 -> 0
-    # 1,00 -> 1
-    # 0,14 -> 0,14
-    # 3,11 -> 3,11
-    # --------------------------------------------------------
+        return ""
 
     if valor.endswith(",00"):
 
@@ -112,7 +148,7 @@ def formatar_imposto(valor):
 
 
 # ============================================================
-# LOCALIZA O PDF AUTOMATICAMENTE
+# LOCALIZA PDF NO TESTE DIRETO
 # ============================================================
 
 def localizar_pdf_teste():
@@ -136,7 +172,6 @@ def localizar_pdf_teste():
             if not arquivo.is_file():
                 continue
 
-
             if arquivo.suffix.lower() != ".pdf":
                 continue
 
@@ -145,10 +180,6 @@ def localizar_pdf_teste():
                 arquivo.name
             )
 
-
-            # ------------------------------------------------
-            # PRIORIZA ARQUIVOS COM "APLIC AUT MAIS"
-            # ------------------------------------------------
 
             if (
                 "aplic aut mais" in nome
@@ -176,11 +207,6 @@ def localizar_pdf_teste():
             candidatos[0]
         )
 
-
-    # ========================================================
-    # SE NÃO ENCONTROU PELO NOME,
-    # PROCURA QUALQUER PDF
-    # ========================================================
 
     todos_pdfs = []
 
@@ -213,27 +239,30 @@ def localizar_pdf_teste():
     if not todos_pdfs:
 
         raise FileNotFoundError(
-            "Nenhum PDF foi encontrado na pasta do projeto "
-            "nem na pasta uploads."
+            "Nenhum PDF encontrado."
         )
 
 
     raise FileNotFoundError(
-        "Há mais de um PDF disponível e nenhum contém "
-        "'Aplic Aut Mais' no nome."
+        "Há vários PDFs disponíveis e nenhum "
+        "contém 'Aplic Aut Mais' no nome."
     )
 
 
 # ============================================================
-# RENDERIZA E GIRA A PÁGINA
+# PREPARA SOMENTE A ÁREA ÚTIL
 # ============================================================
 
-def preparar_pagina(pagina):
+def preparar_area_tabela(pagina):
+
+    # ========================================================
+    # RENDERIZA COM ESCALA MENOR
+    # ========================================================
 
     pix = pagina.get_pixmap(
         matrix=pymupdf.Matrix(
-            3,
-            3
+            ESCALA_RENDER,
+            ESCALA_RENDER
         ),
         alpha=False
     )
@@ -241,13 +270,15 @@ def preparar_pagina(pagina):
 
     imagem = Image.open(
         io.BytesIO(
-            pix.tobytes("png")
+            pix.tobytes(
+                "png"
+            )
         )
     )
 
 
     # ========================================================
-    # O RELATÓRIO ESTÁ GIRADO
+    # GIRA O RELATÓRIO
     # ========================================================
 
     imagem = imagem.rotate(
@@ -256,83 +287,34 @@ def preparar_pagina(pagina):
     )
 
 
-    return imagem
-
-
-# ============================================================
-# OCR COMPLETO DA PÁGINA
-# ============================================================
-
-def fazer_ocr_pagina(imagem):
-
-    dados = pytesseract.image_to_data(
-        imagem,
-        lang="por",
-        output_type=pytesseract.Output.DATAFRAME
-    )
-
-
-    dados = dados[
-        dados["text"].notna()
-    ].copy()
-
-
-    dados["text"] = (
-        dados["text"]
-        .astype(str)
-        .str.strip()
-    )
-
-
-    dados = dados[
-        dados["text"] != ""
-    ].copy()
-
-
-    return dados
-
-
-# ============================================================
-# OCR DE UMA COLUNA
-# ============================================================
-
-def fazer_ocr_coluna(
-    imagem,
-    percentual_inicio,
-    percentual_fim
-):
-
-    largura = imagem.width
-    altura = imagem.height
+    largura_original = imagem.width
+    altura_original = imagem.height
 
 
     # ========================================================
-    # FAIXA VERTICAL DA TABELA
-    # ========================================================
-
-    y_inicio = int(
-        altura * 0.19
-    )
-
-    y_fim = int(
-        altura * 0.86
-    )
-
-
-    # ========================================================
-    # FAIXA HORIZONTAL
+    # RECORTA APENAS A REGIÃO ÚTIL
+    #
+    # Não precisamos OCR do restante da página.
     # ========================================================
 
     x_inicio = int(
-        largura * percentual_inicio
+        largura_original * 0.02
     )
 
     x_fim = int(
-        largura * percentual_fim
+        largura_original * 0.57
+    )
+
+    y_inicio = int(
+        altura_original * 0.15
+    )
+
+    y_fim = int(
+        altura_original * 0.88
     )
 
 
-    recorte = imagem.crop(
+    area = imagem.crop(
         (
             x_inicio,
             y_inicio,
@@ -342,187 +324,366 @@ def fazer_ocr_coluna(
     )
 
 
+    imagem.close()
+
+
     # ========================================================
-    # AMPLIA A COLUNA
+    # ESCALA DE CINZA
+    #
+    # Reduz memória usada pelo Tesseract.
     # ========================================================
 
-    recorte = recorte.resize(
-        (
-            recorte.width * 2,
-            recorte.height * 2
-        )
+    area_cinza = area.convert(
+        "L"
     )
 
+    area.close()
+
+
+    return (
+        area_cinza,
+        largura_original,
+        x_inicio,
+        y_inicio
+    )
+
+
+# ============================================================
+# OCR ÚNICO
+# ============================================================
+
+def fazer_ocr_unico(
+    imagem,
+    x_offset,
+    y_offset
+):
+
+    # ========================================================
+    # USAMOS DICT EM VEZ DE DATAFRAME
+    #
+    # Menor consumo de RAM.
+    # ========================================================
 
     dados = pytesseract.image_to_data(
-        recorte,
+        imagem,
         lang="por",
         config="--psm 6",
-        output_type=pytesseract.Output.DATAFRAME
+        output_type=pytesseract.Output.DICT
     )
 
 
-    dados = dados[
-        dados["text"].notna()
-    ].copy()
+    tokens = []
 
 
-    dados["text"] = (
+    quantidade = len(
         dados["text"]
-        .astype(str)
-        .str.strip()
     )
 
 
-    dados = dados[
-        dados["text"] != ""
-    ].copy()
-
-
-    # ========================================================
-    # CONVERTE POSIÇÃO DO RECORTE PARA A PÁGINA ORIGINAL
-    # ========================================================
-
-    dados["top_original"] = (
-        dados["top"] / 2
-        + y_inicio
-    )
-
-
-    return dados
-
-
-# ============================================================
-# ENCONTRA VALOR NA MESMA LINHA DA DATA
-# ============================================================
-
-def valor_na_linha(
-    dados_coluna,
-    y_data,
-    tolerancia=8
-):
-
-    candidatos = dados_coluna[
-        (
-            dados_coluna["top_original"]
-            >= y_data - tolerancia
-        )
-        &
-        (
-            dados_coluna["top_original"]
-            <= y_data + tolerancia
-        )
-    ].copy()
-
-
-    if candidatos.empty:
-
-        return ""
-
-
-    candidatos = candidatos.sort_values(
-        "left"
-    )
-
-
-    textos = (
-        candidatos["text"]
-        .astype(str)
-        .tolist()
-    )
-
-
-    # ========================================================
-    # PRIMEIRO TENTA CADA TOKEN ISOLADO
-    # ========================================================
-
-    for texto in textos:
-
-        valor = limpar_valor(
-            texto
-        )
-
-        if valor:
-
-            return valor
-
-
-    # ========================================================
-    # DEPOIS TENTA A LINHA TODA JUNTA
-    # ========================================================
-
-    texto_completo = " ".join(
-        textos
-    )
-
-
-    return limpar_valor(
-        texto_completo
-    )
-
-
-# ============================================================
-# IDENTIFICA DATAS
-# ============================================================
-
-def localizar_datas(
-    dados,
-    largura
-):
-
-    resultado = []
-
-
-    # ========================================================
-    # COLUNA DA DATA FICA NO INÍCIO DA TABELA
-    # ========================================================
-
-    limite_x = int(
-        largura * 0.12
-    )
-
-
-    for _, linha in dados.iterrows():
+    for i in range(
+        quantidade
+    ):
 
         texto = str(
-            linha["text"]
+            dados["text"][i]
         ).strip()
 
 
-        if int(
-            linha["left"]
-        ) >= limite_x:
+        if not texto:
+            continue
+
+
+        try:
+
+            left = int(
+                dados["left"][i]
+            )
+
+            top = int(
+                dados["top"][i]
+            )
+
+            width = int(
+                dados["width"][i]
+            )
+
+            block = int(
+                dados["block_num"][i]
+            )
+
+            par = int(
+                dados["par_num"][i]
+            )
+
+            line = int(
+                dados["line_num"][i]
+            )
+
+        except Exception:
 
             continue
 
 
-        if not re.fullmatch(
-            r"\d{2}/\d{2}/\d{4}",
-            texto
-        ):
-
-            continue
-
-
-        resultado.append(
+        tokens.append(
             {
-                "Data": texto,
+                "texto": texto,
 
-                "top": float(
-                    linha["top"]
-                )
+                # Coordenada relativa à página girada inteira
+                "left": left + x_offset,
+
+                "right": (
+                    left
+                    + width
+                    + x_offset
+                ),
+
+                "top": top + y_offset,
+
+                "block": block,
+                "par": par,
+                "line": line
             }
         )
 
 
-    resultado = sorted(
-        resultado,
+    return tokens
+
+
+# ============================================================
+# AGRUPA TOKENS POR LINHA
+# ============================================================
+
+def agrupar_linhas(tokens):
+
+    grupos = {}
+
+
+    for token in tokens:
+
+        chave = (
+            token["block"],
+            token["par"],
+            token["line"]
+        )
+
+
+        if chave not in grupos:
+
+            grupos[chave] = []
+
+
+        grupos[chave].append(
+            token
+        )
+
+
+    linhas = []
+
+
+    for palavras in grupos.values():
+
+        palavras = sorted(
+            palavras,
+            key=lambda item:
+            item["left"]
+        )
+
+
+        if not palavras:
+            continue
+
+
+        top = sum(
+            palavra["top"]
+            for palavra in palavras
+        ) / len(palavras)
+
+
+        texto = " ".join(
+            palavra["texto"]
+            for palavra in palavras
+        )
+
+
+        linhas.append(
+            {
+                "texto": texto,
+                "top": top,
+                "palavras": palavras
+            }
+        )
+
+
+    linhas = sorted(
+        linhas,
         key=lambda item:
         item["top"]
     )
 
 
-    return resultado
+    return linhas
+
+
+# ============================================================
+# LOCALIZA DATAS
+# ============================================================
+
+def localizar_datas(
+    linhas,
+    largura_original
+):
+
+    datas = []
+
+
+    # ========================================================
+    # A DATA FICA NA PARTE ESQUERDA
+    # ========================================================
+
+    limite_x = (
+        largura_original
+        * 0.15
+    )
+
+
+    for linha in linhas:
+
+        for palavra in linha[
+            "palavras"
+        ]:
+
+            texto = palavra[
+                "texto"
+            ]
+
+
+            if palavra[
+                "left"
+            ] > limite_x:
+
+                continue
+
+
+            if re.fullmatch(
+                r"\d{2}/\d{2}/\d{4}",
+                texto
+            ):
+
+                datas.append(
+                    {
+                        "Data": texto,
+                        "top": linha["top"]
+                    }
+                )
+
+                break
+
+
+    return datas
+
+
+# ============================================================
+# LOCALIZA LINHA DA DATA
+# ============================================================
+
+def localizar_linha_data(
+    linhas,
+    y_data,
+    tolerancia=10
+):
+
+    melhor = None
+
+    menor_distancia = None
+
+
+    for linha in linhas:
+
+        distancia = abs(
+            linha["top"]
+            - y_data
+        )
+
+
+        if distancia > tolerancia:
+            continue
+
+
+        if (
+            menor_distancia is None
+            or distancia < menor_distancia
+        ):
+
+            menor_distancia = distancia
+            melhor = linha
+
+
+    return melhor
+
+
+# ============================================================
+# EXTRAI VALOR PELA POSIÇÃO X
+# ============================================================
+
+def extrair_valor_faixa(
+    linha,
+    largura_original,
+    percentual_inicio,
+    percentual_fim
+):
+
+    if linha is None:
+
+        return ""
+
+
+    x_inicio = (
+        largura_original
+        * percentual_inicio
+    )
+
+    x_fim = (
+        largura_original
+        * percentual_fim
+    )
+
+
+    textos = []
+
+
+    for palavra in linha[
+        "palavras"
+    ]:
+
+        centro = (
+            palavra["left"]
+            + palavra["right"]
+        ) / 2
+
+
+        if (
+            centro >= x_inicio
+            and centro < x_fim
+        ):
+
+            textos.append(
+                palavra["texto"]
+            )
+
+
+    if not textos:
+
+        return ""
+
+
+    texto = " ".join(
+        textos
+    )
+
+
+    return limpar_valor(
+        texto
+    )
 
 
 # ============================================================
@@ -533,7 +694,13 @@ def ler_pagina_aplicacao(
     pagina
 ):
 
-    imagem = preparar_pagina(
+    (
+        imagem,
+        largura_original,
+        x_offset,
+        y_offset
+
+    ) = preparar_area_tabela(
         pagina
     )
 
@@ -541,57 +708,84 @@ def ler_pagina_aplicacao(
     try:
 
         # ====================================================
-        # OCR COMPLETO
+        # SOMENTE 1 OCR
         # ====================================================
 
-        dados_pagina = fazer_ocr_pagina(
-            imagem
+        tokens = fazer_ocr_unico(
+            imagem,
+            x_offset,
+            y_offset
         )
 
 
-        largura = imagem.width
+    finally:
+
+        imagem.close()
 
 
-        # ====================================================
-        # DATAS
-        # ====================================================
+    linhas = agrupar_linhas(
+        tokens
+    )
 
-        datas = localizar_datas(
-            dados_pagina,
-            largura
+
+    datas = localizar_datas(
+        linhas,
+        largura_original
+    )
+
+
+    print(
+        "CIBI APLICAÇÃO - DATAS ENCONTRADAS:",
+        len(datas)
+    )
+
+
+    registros = []
+
+
+    for item in datas:
+
+        data = item[
+            "Data"
+        ]
+
+        y_data = item[
+            "top"
+        ]
+
+
+        linha = localizar_linha_data(
+            linhas,
+            y_data
         )
 
 
-        print(
-            "CIBI APLICAÇÃO - DATAS ENCONTRADAS:",
-            len(datas)
-        )
+        if linha is None:
 
-
-        if not datas:
-
-            return []
+            continue
 
 
         # ====================================================
         # APLICAÇÕES
         # ====================================================
 
-        coluna_aplicacoes = fazer_ocr_coluna(
-            imagem,
+        aplicacao = extrair_valor_faixa(
+            linha,
+            largura_original,
             0.15,
-            0.215
+            0.23
         )
 
 
         # ====================================================
-        # VALOR PRINCIPAL RESGATADO
+        # PRINCIPAL RESGATADO
         # ====================================================
 
-        coluna_principal = fazer_ocr_coluna(
-            imagem,
-            0.275,
-            0.345
+        principal = extrair_valor_faixa(
+            linha,
+            largura_original,
+            0.26,
+            0.36
         )
 
 
@@ -599,10 +793,11 @@ def ler_pagina_aplicacao(
         # IOF
         # ====================================================
 
-        coluna_iof = fazer_ocr_coluna(
-            imagem,
-            0.395,
-            0.45
+        iof = extrair_valor_faixa(
+            linha,
+            largura_original,
+            0.39,
+            0.46
         )
 
 
@@ -610,86 +805,44 @@ def ler_pagina_aplicacao(
         # IRRF
         # ====================================================
 
-        coluna_irrf = fazer_ocr_coluna(
-            imagem,
-            0.45,
-            0.51
+        irrf = extrair_valor_faixa(
+            linha,
+            largura_original,
+            0.46,
+            0.53
         )
 
 
-        # ====================================================
-        # MONTA REGISTROS
-        # ====================================================
-
-        registros = []
+        iof = formatar_imposto(
+            iof
+        )
 
 
-        for item in datas:
-
-            data = item[
-                "Data"
-            ]
-
-            y = item[
-                "top"
-            ]
+        irrf = formatar_imposto(
+            irrf
+        )
 
 
-            aplicacao = valor_na_linha(
-                coluna_aplicacoes,
-                y
-            )
+        registros.append(
+            {
+                "DATA": data,
 
+                "aplicações":
+                aplicacao,
 
-            principal = valor_na_linha(
-                coluna_principal,
-                y
-            )
+                "valor principal resgatado":
+                principal,
 
+                "iof":
+                iof,
 
-            iof = valor_na_linha(
-                coluna_iof,
-                y
-            )
-
-
-            irrf = valor_na_linha(
-                coluna_irrf,
-                y
-            )
-
-
-            iof = formatar_imposto(
-                iof
-            )
-
-
-            irrf = formatar_imposto(
+                "irrf":
                 irrf
-            )
+            }
+        )
 
 
-            registros.append(
-                {
-                    "DATA": data,
-
-                    "aplicações": aplicacao,
-
-                    "valor principal resgatado": principal,
-
-                    "iof": iof,
-
-                    "irrf": irrf
-                }
-            )
-
-
-        return registros
-
-
-    finally:
-
-        imagem.close()
+    return registros
 
 
 # ============================================================
@@ -748,7 +901,7 @@ def ler_cibi_aplicacao(
 
 
     # ========================================================
-    # DATAFRAME
+    # DATAFRAME FINAL
     # ========================================================
 
     df = pd.DataFrame(
@@ -769,7 +922,7 @@ def ler_cibi_aplicacao(
 
 
     # ========================================================
-    # REMOVE LINHAS COMPLETAMENTE VAZIAS
+    # REMOVE LINHA SEM NENHUM VALOR
     # ========================================================
 
     df = df[
@@ -789,10 +942,6 @@ def ler_cibi_aplicacao(
         )
     ].copy()
 
-
-    # ========================================================
-    # MANTÉM A ORDEM ORIGINAL
-    # ========================================================
 
     df = df.reset_index(
         drop=True
@@ -860,10 +1009,6 @@ if __name__ == "__main__":
                 )
             )
 
-
-            # =================================================
-            # MESMO NOME DO PDF
-            # =================================================
 
             nome_pdf = Path(
                 caminho_pdf

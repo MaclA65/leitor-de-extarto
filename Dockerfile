@@ -5,6 +5,10 @@ RUN apt-get update && apt-get install -y \
     tesseract-ocr-por \
     && rm -rf /var/lib/apt/lists/*
 
+# Limita o Tesseract a 1 thread.
+# Isso reduz bastante o consumo de memória no Render.
+ENV OMP_THREAD_LIMIT=1
+
 WORKDIR /app
 
 COPY requirements.txt .
