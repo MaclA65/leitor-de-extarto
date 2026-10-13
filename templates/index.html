@@ -124,6 +124,14 @@
                 </a>
 
                 <a
+                    href="{{ url_for('empresa', nome='cibi_aplicacao') }}"
+                    class="empresa-opcao"
+                    data-nome="CIBI APLICAÇÃO"
+                >
+                    CIBI APLICAÇÃO
+                </a>
+
+                <a
                     href="{{ url_for('empresa', nome='wooh_midia') }}"
                     class="empresa-opcao"
                     data-nome="WOOH MIDIA"
@@ -169,7 +177,9 @@
 
     </div>
 
-    <script src="{{ url_for('static', filename='tela.js') }}"></script>
+    <script
+        src="{{ url_for('static', filename='tela.js') }}"
+    ></script>
 
 </body>
 

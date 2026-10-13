@@ -6,6 +6,7 @@ from itau_modelo2 import ler_itau_modelo2
 from itau_aplicacao import ler_itau_aplicacao
 from bradesco_unificado import ler_bradesco_unificado
 from alooh_excel import ler_alooh_excel
+from cibi_aplicacao import ler_cibi_aplicacao
 
 import os
 import shutil
@@ -46,9 +47,11 @@ def formatar_br(valor):
         return ""
 
     try:
+
         valor = float(valor)
 
     except (ValueError, TypeError):
+
         return str(valor)
 
     return (
@@ -189,9 +192,6 @@ def processar():
 
         except Exception as erro:
 
-            # Se der erro durante o OCR,
-            # também apaga os recortes.
-
             apagar_recortes()
 
             print(
@@ -245,6 +245,36 @@ def processar():
             df = ler_itau_modelo2(
                 caminho_arquivo
             )
+
+
+        # -----------------------------
+        # CIBI - APLICAÇÃO AUT MAIS
+        # -----------------------------
+
+        elif empresa == "cibi_aplicacao":
+
+            print(
+                "USANDO LEITOR CIBI APLICAÇÃO"
+            )
+
+            try:
+
+                df = ler_cibi_aplicacao(
+                    caminho_arquivo
+                )
+
+            except Exception as erro:
+
+                print(
+                    "ERRO NA CIBI APLICAÇÃO:",
+                    erro
+                )
+
+                return (
+                    "Erro durante a leitura "
+                    "da CIBI Aplicação: "
+                    f"{erro}"
+                )
 
 
         # -----------------------------
@@ -323,6 +353,7 @@ def processar():
             "nenhum resultado."
         )
 
+
     if df.empty:
 
         if empresa == "leitura_inteligente":
@@ -387,18 +418,36 @@ def processar():
 
 
     # =====================================
+    # ORGANIZA COLUNAS
+    # CIBI APLICAÇÃO
+    # =====================================
+
+    if empresa == "cibi_aplicacao":
+
+        colunas_desejadas = [
+            "DATA",
+            "aplicações",
+            "valor principal resgatado",
+            "iof",
+            "irrf"
+        ]
+
+        colunas_existentes = [
+            coluna
+            for coluna in colunas_desejadas
+            if coluna in df.columns
+        ]
+
+        df = df[
+            colunas_existentes
+        ].copy()
+
+
+    # =====================================
     # NOME DO CSV
     # =====================================
 
     if empresa == "leitura_inteligente":
-
-        # Exemplo:
-        #
-        # Extrato Itau Setembro.pdf
-        #
-        # vira:
-        #
-        # Extrato Itau Setembro.csv
 
         nome_original = os.path.basename(
             arquivo.filename
@@ -411,6 +460,22 @@ def processar():
         nome_saida = (
             f"{nome_sem_extensao}.csv"
         )
+
+
+    elif empresa == "cibi_aplicacao":
+
+        nome_original = os.path.basename(
+            arquivo.filename
+        )
+
+        nome_sem_extensao = os.path.splitext(
+            nome_original
+        )[0]
+
+        nome_saida = (
+            f"{nome_sem_extensao}.csv"
+        )
+
 
     else:
 
