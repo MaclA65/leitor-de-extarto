@@ -4,7 +4,6 @@ import re
 
 # ============================================================
 # LIMITA O TESSERACT A 1 THREAD
-# IMPORTANTE PARA O RENDER
 # ============================================================
 
 os.environ["OMP_THREAD_LIMIT"] = "1"
@@ -33,13 +32,10 @@ if CAMINHO_TESSERACT_WINDOWS.exists():
 
 
 # ============================================================
-# CONFIGURAÇÕES
+# CONFIGURAÇÃO
 # ============================================================
 
-# Antes estava em 2x / 3x.
-# 1.35 reduz bastante memória.
-
-ESCALA_RENDER = 1.35
+ESCALA_RENDER = 1.5
 
 
 # ============================================================
@@ -59,7 +55,7 @@ def normalizar_texto(texto):
 
 
 # ============================================================
-# LIMPA VALOR
+# LIMPA VALOR MONETÁRIO
 # ============================================================
 
 def limpar_valor(valor):
@@ -78,12 +74,9 @@ def limpar_valor(valor):
         .replace("R$", "")
     )
 
+
     # ========================================================
     # PADRÃO BRASILEIRO
-    #
-    # 495,88
-    # 13.212,74
-    # 600.296,66
     # ========================================================
 
     resultado = re.search(
@@ -98,8 +91,6 @@ def limpar_valor(valor):
 
     # ========================================================
     # OCR PODE TROCAR VÍRGULA POR PONTO
-    #
-    # 495.88
     # ========================================================
 
     resultado = re.search(
@@ -109,9 +100,9 @@ def limpar_valor(valor):
 
     if resultado:
 
-        valor = resultado.group(0)
+        numero = resultado.group(0)
 
-        inteiro, centavos = valor.rsplit(
+        inteiro, centavos = numero.rsplit(
             ".",
             1
         )
@@ -127,7 +118,7 @@ def limpar_valor(valor):
 
 
 # ============================================================
-# FORMATA IMPOSTO
+# FORMATA IOF / IRRF
 # ============================================================
 
 def formatar_imposto(valor):
@@ -137,7 +128,6 @@ def formatar_imposto(valor):
     )
 
     if not valor:
-
         return ""
 
     if valor.endswith(",00"):
@@ -148,7 +138,7 @@ def formatar_imposto(valor):
 
 
 # ============================================================
-# LOCALIZA PDF NO TESTE DIRETO
+# LOCALIZA PDF PARA TESTE
 # ============================================================
 
 def localizar_pdf_teste():
@@ -250,13 +240,15 @@ def localizar_pdf_teste():
 
 
 # ============================================================
-# PREPARA SOMENTE A ÁREA ÚTIL
+# PREPARA PÁGINA
 # ============================================================
 
-def preparar_area_tabela(pagina):
+def preparar_pagina(pagina):
 
     # ========================================================
-    # RENDERIZA COM ESCALA MENOR
+    # RENDERIZA EM 1.5X
+    #
+    # Antes usávamos 2x / 3x.
     # ========================================================
 
     pix = pagina.get_pixmap(
@@ -270,9 +262,7 @@ def preparar_area_tabela(pagina):
 
     imagem = Image.open(
         io.BytesIO(
-            pix.tobytes(
-                "png"
-            )
+            pix.tobytes("png")
         )
     )
 
@@ -287,82 +277,27 @@ def preparar_area_tabela(pagina):
     )
 
 
-    largura_original = imagem.width
-    altura_original = imagem.height
-
-
     # ========================================================
-    # RECORTA APENAS A REGIÃO ÚTIL
+    # CONVERTE PARA CINZA
     #
-    # Não precisamos OCR do restante da página.
+    # NÃO RECORTA MAIS A PÁGINA.
     # ========================================================
 
-    x_inicio = int(
-        largura_original * 0.02
+    imagem_cinza = imagem.convert(
+        "L"
     )
-
-    x_fim = int(
-        largura_original * 0.57
-    )
-
-    y_inicio = int(
-        altura_original * 0.15
-    )
-
-    y_fim = int(
-        altura_original * 0.88
-    )
-
-
-    area = imagem.crop(
-        (
-            x_inicio,
-            y_inicio,
-            x_fim,
-            y_fim
-        )
-    )
-
 
     imagem.close()
 
 
-    # ========================================================
-    # ESCALA DE CINZA
-    #
-    # Reduz memória usada pelo Tesseract.
-    # ========================================================
-
-    area_cinza = area.convert(
-        "L"
-    )
-
-    area.close()
-
-
-    return (
-        area_cinza,
-        largura_original,
-        x_inicio,
-        y_inicio
-    )
+    return imagem_cinza
 
 
 # ============================================================
 # OCR ÚNICO
 # ============================================================
 
-def fazer_ocr_unico(
-    imagem,
-    x_offset,
-    y_offset
-):
-
-    # ========================================================
-    # USAMOS DICT EM VEZ DE DATAFRAME
-    #
-    # Menor consumo de RAM.
-    # ========================================================
+def fazer_ocr_unico(imagem):
 
     dados = pytesseract.image_to_data(
         imagem,
@@ -427,18 +362,9 @@ def fazer_ocr_unico(
         tokens.append(
             {
                 "texto": texto,
-
-                # Coordenada relativa à página girada inteira
-                "left": left + x_offset,
-
-                "right": (
-                    left
-                    + width
-                    + x_offset
-                ),
-
-                "top": top + y_offset,
-
+                "left": left,
+                "right": left + width,
+                "top": top,
                 "block": block,
                 "par": par,
                 "line": line
@@ -530,18 +456,18 @@ def agrupar_linhas(tokens):
 
 def localizar_datas(
     linhas,
-    largura_original
+    largura
 ):
 
     datas = []
 
 
     # ========================================================
-    # A DATA FICA NA PARTE ESQUERDA
+    # DATA FICA NA PRIMEIRA PARTE DA TABELA
     # ========================================================
 
     limite_x = (
-        largura_original
+        largura
         * 0.15
     )
 
@@ -554,7 +480,7 @@ def localizar_datas(
 
             texto = palavra[
                 "texto"
-            ]
+            ].strip()
 
 
             if palavra[
@@ -563,6 +489,12 @@ def localizar_datas(
 
                 continue
 
+
+            # =================================================
+            # FORMATO NORMAL
+            #
+            # 02/06/2026
+            # =================================================
 
             if re.fullmatch(
                 r"\d{2}/\d{2}/\d{4}",
@@ -589,11 +521,10 @@ def localizar_datas(
 def localizar_linha_data(
     linhas,
     y_data,
-    tolerancia=10
+    tolerancia=12
 ):
 
     melhor = None
-
     menor_distancia = None
 
 
@@ -606,6 +537,7 @@ def localizar_linha_data(
 
 
         if distancia > tolerancia:
+
             continue
 
 
@@ -622,12 +554,12 @@ def localizar_linha_data(
 
 
 # ============================================================
-# EXTRAI VALOR PELA POSIÇÃO X
+# EXTRAI VALOR POR FAIXA HORIZONTAL
 # ============================================================
 
 def extrair_valor_faixa(
     linha,
-    largura_original,
+    largura,
     percentual_inicio,
     percentual_fim
 ):
@@ -638,12 +570,12 @@ def extrair_valor_faixa(
 
 
     x_inicio = (
-        largura_original
+        largura
         * percentual_inicio
     )
 
     x_fim = (
-        largura_original
+        largura
         * percentual_fim
     )
 
@@ -694,27 +626,36 @@ def ler_pagina_aplicacao(
     pagina
 ):
 
-    (
-        imagem,
-        largura_original,
-        x_offset,
-        y_offset
-
-    ) = preparar_area_tabela(
+    imagem = preparar_pagina(
         pagina
     )
 
 
     try:
 
+        largura = imagem.width
+
+
+        print(
+            "CIBI APLICAÇÃO - TAMANHO DA IMAGEM:",
+            imagem.width,
+            "x",
+            imagem.height
+        )
+
+
         # ====================================================
-        # SOMENTE 1 OCR
+        # APENAS UM OCR
         # ====================================================
 
         tokens = fazer_ocr_unico(
-            imagem,
-            x_offset,
-            y_offset
+            imagem
+        )
+
+
+        print(
+            "CIBI APLICAÇÃO - TOKENS OCR:",
+            len(tokens)
         )
 
 
@@ -723,14 +664,22 @@ def ler_pagina_aplicacao(
         imagem.close()
 
 
+    # ========================================================
+    # AGRUPA LINHAS
+    # ========================================================
+
     linhas = agrupar_linhas(
         tokens
     )
 
 
+    # ========================================================
+    # LOCALIZA DATAS
+    # ========================================================
+
     datas = localizar_datas(
         linhas,
-        largura_original
+        largura
     )
 
 
@@ -742,6 +691,10 @@ def ler_pagina_aplicacao(
 
     registros = []
 
+
+    # ========================================================
+    # PROCESSA CADA DATA
+    # ========================================================
 
     for item in datas:
 
@@ -771,7 +724,7 @@ def ler_pagina_aplicacao(
 
         aplicacao = extrair_valor_faixa(
             linha,
-            largura_original,
+            largura,
             0.15,
             0.23
         )
@@ -783,7 +736,7 @@ def ler_pagina_aplicacao(
 
         principal = extrair_valor_faixa(
             linha,
-            largura_original,
+            largura,
             0.26,
             0.36
         )
@@ -795,7 +748,7 @@ def ler_pagina_aplicacao(
 
         iof = extrair_valor_faixa(
             linha,
-            largura_original,
+            largura,
             0.39,
             0.46
         )
@@ -807,7 +760,7 @@ def ler_pagina_aplicacao(
 
         irrf = extrair_valor_faixa(
             linha,
-            largura_original,
+            largura,
             0.46,
             0.53
         )
@@ -922,7 +875,7 @@ def ler_cibi_aplicacao(
 
 
     # ========================================================
-    # REMOVE LINHA SEM NENHUM VALOR
+    # REMOVE LINHAS SEM VALOR
     # ========================================================
 
     df = df[
