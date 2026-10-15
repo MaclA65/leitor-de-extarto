@@ -784,8 +784,8 @@ def nova_linha(
         "COD. HISTORICO":
         "",
 
-        "COMPLEMENTO HISTÓRICO":
-        historico,
+       "COMPLEMENTO HISTÓRICO":
+       str(historico).strip().upper(),
 
         "INICIAL LOTE":
         inicial_lote,

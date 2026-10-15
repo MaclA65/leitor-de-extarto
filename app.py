@@ -8,11 +8,13 @@ from bradesco_unificado import ler_bradesco_unificado
 from alooh_excel import ler_alooh_excel
 from cibi_aplicacao import ler_cibi_aplicacao
 
+
 # =====================================
 # LAYOUTS FINAIS
 # =====================================
 
 from layout_serva import gerar_layout_serva
+from layout_casa_cuidados_itau import gerar_layout_casa_cuidados_itau
 
 
 import os
@@ -790,6 +792,134 @@ def processar_layout():
             return (
                 "Erro ao gerar o arquivo "
                 "final da SERVA: "
+                f"{erro}"
+            )
+
+
+        # =================================
+        # DOWNLOAD
+        # =================================
+
+        return send_file(
+            caminho_saida,
+            as_attachment=True,
+            download_name=nome_saida
+        )
+
+
+    # =====================================
+    # CASA DE CUIDADOS - ITAÚ
+    # =====================================
+
+    if empresa == "casa_cuidados_itau":
+
+        print(
+            "GERANDO LAYOUT FINAL "
+            "CASA DE CUIDADOS ITAU"
+        )
+
+        try:
+
+            resultado = (
+                gerar_layout_casa_cuidados_itau(
+                    caminho_arquivo
+                )
+            )
+
+        except Exception as erro:
+
+            print(
+                "ERRO NO LAYOUT "
+                "CASA DE CUIDADOS ITAU:",
+                erro
+            )
+
+            return (
+                "Erro durante a geração "
+                "do Layout Final da "
+                "Casa de Cuidados Itaú: "
+                f"{erro}"
+            )
+
+
+        # =================================
+        # VALIDA RESULTADO
+        # =================================
+
+        if resultado is None:
+
+            return (
+                "O Layout da Casa de "
+                "Cuidados Itaú não retornou "
+                "nenhum resultado."
+            )
+
+
+        if resultado.empty:
+
+            return (
+                "Nenhum lançamento foi "
+                "gerado no Layout Final da "
+                "Casa de Cuidados Itaú."
+            )
+
+
+        # =================================
+        # NOME DO ARQUIVO FINAL
+        # =================================
+
+        nome_original = os.path.basename(
+            arquivo.filename
+        )
+
+        nome_sem_extensao = os.path.splitext(
+            nome_original
+        )[0]
+
+        nome_saida = (
+            f"{nome_sem_extensao}"
+            "_LAYOUT_CASA_CUIDADOS_ITAU.csv"
+        )
+
+
+        caminho_saida = os.path.join(
+            PASTA_SAIDA,
+            nome_saida
+        )
+
+
+        # =================================
+        # GERA CSV FINAL
+        # =================================
+
+        try:
+
+            resultado.to_csv(
+                caminho_saida,
+                index=False,
+                sep=";",
+                encoding="utf-8-sig"
+            )
+
+        except PermissionError:
+
+            return (
+                "O arquivo de saída está aberto. "
+                "Feche o arquivo no Excel "
+                "e tente novamente."
+            )
+
+        except Exception as erro:
+
+            print(
+                "ERRO AO GERAR CSV "
+                "CASA DE CUIDADOS ITAU:",
+                erro
+            )
+
+            return (
+                "Erro ao gerar o arquivo "
+                "final da Casa de Cuidados Itaú: "
                 f"{erro}"
             )
 
