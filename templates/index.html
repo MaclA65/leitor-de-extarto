@@ -1,186 +1,181 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
+{% extends "base.html" %}
 
-<head>
-    <meta charset="UTF-8">
+{% block title %}
+Seleção de Empresa
+{% endblock %}
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+{% block head %}
 
-    <title>Seleção de Empresa</title>
+<link
+    rel="stylesheet"
+    href="{{ url_for('static', filename='style.css') }}"
+>
 
-    <link
-        rel="stylesheet"
-        href="{{ url_for('static', filename='style.css') }}"
-    >
-</head>
+{% endblock %}
 
-<body>
 
-    <div class="container">
+{% block content %}
 
-        <h1>Selecione a Empresa</h1>
+<div class="container">
 
-        <p class="subtitulo">
-            Escolha a empresa que deseja processar
-        </p>
+    <h1>Selecione a Empresa</h1>
 
-        <div class="seletor-empresa">
+    <p class="subtitulo">
+        Escolha a empresa que deseja processar
+    </p>
 
-            <div class="barra-pesquisa">
+    <div class="seletor-empresa">
 
-                <img
-                    src="{{ url_for('static', filename='pngtree-cartoon-blue-magnifying-glass-illustration-image_1214215-removebg-preview.png') }}"
-                    alt="Pesquisar"
-                    class="lupa-img"
-                >
+        <div class="barra-pesquisa">
 
-                <input
-                    type="text"
-                    id="pesquisaEmpresa"
-                    placeholder="Pesquisar empresa..."
-                    autocomplete="off"
-                >
-
-            </div>
-
-            <div
-                class="lista-empresas"
-                id="listaEmpresas"
+            <img
+                src="{{ url_for('static', filename='pngtree-cartoon-blue-magnifying-glass-illustration-image_1214215-removebg-preview.png') }}"
+                alt="Pesquisar"
+                class="lupa-img"
             >
 
-                <a
-                    href="{{ url_for('empresa', nome='leitura_inteligente') }}"
-                    class="empresa-opcao"
-                    data-nome="LEITURA INTELIGENTE"
-                >
-                    LEITURA INTELIGENTE
-                </a>
+            <input
+                type="text"
+                id="pesquisaEmpresa"
+                placeholder="Pesquisar empresa..."
+                autocomplete="off"
+            >
 
-                <a
-                    href="{{ url_for('empresa', nome='serva') }}"
-                    class="empresa-opcao"
-                    data-nome="SERVA"
-                >
-                    SERVA
-                </a>
+        </div>
 
-                <a
-                    href="{{ url_for('empresa', nome='casa_cuidados_itau') }}"
-                    class="empresa-opcao"
-                    data-nome="CASA DE CUIDADOS ITAU"
-                >
-                    CASA DE CUIDADOS ITAU
-                </a>
+        <div
+            class="lista-empresas"
+            id="listaEmpresas"
+        >
 
-                <a
-                    href="{{ url_for('empresa', nome='ds') }}"
-                    class="empresa-opcao"
-                    data-nome="DS"
-                >
-                    DS
-                </a>
+            <a
+                href="{{ url_for('empresa', nome='leitura_inteligente') }}"
+                class="empresa-opcao"
+                data-nome="LEITURA INTELIGENTE"
+            >
+                LEITURA INTELIGENTE
+            </a>
 
-                <a
-                    href="{{ url_for('empresa', nome='alooh_midia') }}"
-                    class="empresa-opcao"
-                    data-nome="ALOOH MIDIA"
-                >
-                    ALOOH MIDIA
-                </a>
+            <a
+                href="{{ url_for('empresa', nome='serva') }}"
+                class="empresa-opcao"
+                data-nome="SERVA"
+            >
+                SERVA
+            </a>
 
-                <a
-                    href="{{ url_for('empresa', nome='casa_cuidados_bradesco') }}"
-                    class="empresa-opcao"
-                    data-nome="CASA DE CUIDADOS BRADESCO"
-                >
-                    CASA DE CUIDADOS BRADESCO
-                </a>
+            <a
+                href="{{ url_for('empresa', nome='casa_cuidados_itau') }}"
+                class="empresa-opcao"
+                data-nome="CASA DE CUIDADOS ITAU"
+            >
+                CASA DE CUIDADOS ITAU
+            </a>
 
-                <a
-                    href="{{ url_for('empresa', nome='globe') }}"
-                    class="empresa-opcao"
-                    data-nome="GLOBE"
-                >
-                    GLOBE
-                </a>
+            <a
+                href="{{ url_for('empresa', nome='ds') }}"
+                class="empresa-opcao"
+                data-nome="DS"
+            >
+                DS
+            </a>
 
-                <a
-                    href="{{ url_for('empresa', nome='nrg') }}"
-                    class="empresa-opcao"
-                    data-nome="NRG"
-                >
-                    NRG
-                </a>
+            <a
+                href="{{ url_for('empresa', nome='alooh_midia') }}"
+                class="empresa-opcao"
+                data-nome="ALOOH MIDIA"
+            >
+                ALOOH MIDIA
+            </a>
 
-                <a
-                    href="{{ url_for('empresa', nome='cibi') }}"
-                    class="empresa-opcao"
-                    data-nome="CIBI"
-                >
-                    CIBI
-                </a>
+            <a
+                href="{{ url_for('empresa', nome='casa_cuidados_bradesco') }}"
+                class="empresa-opcao"
+                data-nome="CASA DE CUIDADOS BRADESCO"
+            >
+                CASA DE CUIDADOS BRADESCO
+            </a>
 
-                <a
-                    href="{{ url_for('empresa', nome='cibi_aplicacao') }}"
-                    class="empresa-opcao"
-                    data-nome="CIBI APLICAÇÃO"
-                >
-                    CIBI APLICAÇÃO
-                </a>
+            <a
+                href="{{ url_for('empresa', nome='globe') }}"
+                class="empresa-opcao"
+                data-nome="GLOBE"
+            >
+                GLOBE
+            </a>
 
-                <a
-                    href="{{ url_for('empresa', nome='wooh_midia') }}"
-                    class="empresa-opcao"
-                    data-nome="WOOH MIDIA"
-                >
-                    WOOH MIDIA
-                </a>
+            <a
+                href="{{ url_for('empresa', nome='nrg') }}"
+                class="empresa-opcao"
+                data-nome="NRG"
+            >
+                NRG
+            </a>
 
-                <a
-                    href="{{ url_for('empresa', nome='sukyo_05152_1') }}"
-                    class="empresa-opcao"
-                    data-nome="SUKYO 05152-1"
-                >
-                    SUKYO 05152-1
-                </a>
+            <a
+                href="{{ url_for('empresa', nome='cibi') }}"
+                class="empresa-opcao"
+                data-nome="CIBI"
+            >
+                CIBI
+            </a>
 
-                <a
-                    href="{{ url_for('empresa', nome='sukyo_00026_1') }}"
-                    class="empresa-opcao"
-                    data-nome="SUKYO 00026-1"
-                >
-                    SUKYO 00026-1
-                </a>
+            <a
+                href="{{ url_for('empresa', nome='cibi_aplicacao') }}"
+                class="empresa-opcao"
+                data-nome="CIBI APLICAÇÃO"
+            >
+                CIBI APLICAÇÃO
+            </a>
 
-                <a
-                    href="{{ url_for('empresa', nome='sukyo_0006_4') }}"
-                    class="empresa-opcao"
-                    data-nome="SUKYO 0006-4"
-                >
-                    SUKYO 0006-4
-                </a>
+            <a
+                href="{{ url_for('empresa', nome='wooh_midia') }}"
+                class="empresa-opcao"
+                data-nome="WOOH MIDIA"
+            >
+                WOOH MIDIA
+            </a>
 
-                <a
-                    href="{{ url_for('empresa', nome='sukyo_00016_3') }}"
-                    class="empresa-opcao"
-                    data-nome="SUKYO 00016-3"
-                >
-                    SUKYO 00016-3
-                </a>
+            <a
+                href="{{ url_for('empresa', nome='sukyo_05152_1') }}"
+                class="empresa-opcao"
+                data-nome="SUKYO 05152-1"
+            >
+                SUKYO 05152-1
+            </a>
 
-            </div>
+            <a
+                href="{{ url_for('empresa', nome='sukyo_00026_1') }}"
+                class="empresa-opcao"
+                data-nome="SUKYO 00026-1"
+            >
+                SUKYO 00026-1
+            </a>
+
+            <a
+                href="{{ url_for('empresa', nome='sukyo_0006_4') }}"
+                class="empresa-opcao"
+                data-nome="SUKYO 0006-4"
+            >
+                SUKYO 0006-4
+            </a>
+
+            <a
+                href="{{ url_for('empresa', nome='sukyo_00016_3') }}"
+                class="empresa-opcao"
+                data-nome="SUKYO 00016-3"
+            >
+                SUKYO 00016-3
+            </a>
 
         </div>
 
     </div>
 
-    <script
-        src="{{ url_for('static', filename='tela.js') }}"
-    ></script>
+</div>
 
-</body>
+<script
+    src="{{ url_for('static', filename='tela.js') }}"
+></script>
 
-</html>
+{% endblock %}

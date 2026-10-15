@@ -8,12 +8,23 @@ from bradesco_unificado import ler_bradesco_unificado
 from alooh_excel import ler_alooh_excel
 from cibi_aplicacao import ler_cibi_aplicacao
 
+# =====================================
+# LAYOUTS FINAIS
+# =====================================
+
+from layout_serva import gerar_layout_serva
+
+
 import os
 import shutil
 
 
 app = Flask(__name__)
 
+
+# =====================================
+# PASTAS
+# =====================================
 
 PASTA_UPLOAD = "uploads"
 PASTA_SAIDA = "saidas"
@@ -92,6 +103,7 @@ def apagar_recortes():
 
 # =====================================
 # TELA INICIAL
+# LEITOR DE EXTRATO
 # =====================================
 
 @app.route("/")
@@ -104,6 +116,7 @@ def inicio():
 
 # =====================================
 # TELA DA EMPRESA
+# LEITOR DE EXTRATO
 # =====================================
 
 @app.route("/empresa/<nome>")
@@ -116,7 +129,35 @@ def empresa(nome):
 
 
 # =====================================
+# TELA INICIAL
+# LAYOUT FINAL
+# =====================================
+
+@app.route("/layout-final")
+def layout_final():
+
+    return render_template(
+        "layout_final.html"
+    )
+
+
+# =====================================
+# TELA DA EMPRESA
+# LAYOUT FINAL
+# =====================================
+
+@app.route("/layout-final/<nome>")
+def layout_empresa(nome):
+
+    return render_template(
+        "layout_empresa.html",
+        empresa=nome
+    )
+
+
+# =====================================
 # PROCESSAMENTO
+# LEITOR DE EXTRATO
 # =====================================
 
 @app.route(
@@ -136,6 +177,7 @@ def processar():
     empresa = request.form.get(
         "empresa"
     )
+
 
     print(
         "EMPRESA RECEBIDA:",
@@ -346,6 +388,7 @@ def processar():
     if df is None:
 
         if empresa == "leitura_inteligente":
+
             apagar_recortes()
 
         return (
@@ -357,6 +400,7 @@ def processar():
     if df.empty:
 
         if empresa == "leitura_inteligente":
+
             apagar_recortes()
 
         return (
@@ -506,6 +550,7 @@ def processar():
     except PermissionError:
 
         if empresa == "leitura_inteligente":
+
             apagar_recortes()
 
         return (
@@ -517,6 +562,7 @@ def processar():
     except Exception as erro:
 
         if empresa == "leitura_inteligente":
+
             apagar_recortes()
 
         return (
@@ -542,6 +588,231 @@ def processar():
         caminho_csv,
         as_attachment=True,
         download_name=nome_saida
+    )
+
+
+# =====================================
+# PROCESSAMENTO DO LAYOUT FINAL
+# =====================================
+
+@app.route(
+    "/processar-layout",
+    methods=["POST"]
+)
+def processar_layout():
+
+    # =====================================
+    # RECEBE ARQUIVO E EMPRESA
+    # =====================================
+
+    arquivo = request.files.get(
+        "arquivo"
+    )
+
+    empresa = request.form.get(
+        "empresa"
+    )
+
+
+    print(
+        "LAYOUT FINAL - EMPRESA:",
+        empresa
+    )
+
+
+    # =====================================
+    # VALIDAÇÕES
+    # =====================================
+
+    if not arquivo:
+
+        return (
+            "Nenhum arquivo enviado "
+            "para o Layout Final."
+        )
+
+    if not empresa:
+
+        return (
+            "Empresa não identificada "
+            "no Layout Final."
+        )
+
+
+    # =====================================
+    # SALVA O ARQUIVO CONFERIDO
+    # =====================================
+
+    caminho_arquivo = os.path.join(
+        PASTA_UPLOAD,
+        arquivo.filename
+    )
+
+    arquivo.save(
+        caminho_arquivo
+    )
+
+
+    # =====================================
+    # SERVA
+    # =====================================
+
+    if empresa == "serva":
+
+        print(
+            "GERANDO LAYOUT FINAL SERVA"
+        )
+
+        try:
+
+            resultado = gerar_layout_serva(
+                caminho_arquivo
+            )
+
+        except Exception as erro:
+
+            print(
+                "ERRO NO LAYOUT SERVA:",
+                erro
+            )
+
+            return (
+                "Erro durante a geração "
+                "do Layout Final da SERVA: "
+                f"{erro}"
+            )
+
+
+        # =================================
+        # VALIDA RESULTADO
+        # =================================
+
+        if resultado is None:
+
+            return (
+                "O Layout SERVA não retornou "
+                "nenhum resultado."
+            )
+
+
+        if resultado.empty:
+
+            return (
+                "Nenhum lançamento foi gerado "
+                "no Layout Final da SERVA."
+            )
+
+
+        # =================================
+        # MOSTRA AVISOS NO LOG
+        # =================================
+
+        avisos = resultado.attrs.get(
+            "avisos",
+            []
+        )
+
+
+        if avisos:
+
+            print(
+                "====================================="
+            )
+
+            print(
+                "AVISOS DO LAYOUT SERVA"
+            )
+
+            print(
+                "====================================="
+            )
+
+
+            for aviso in avisos:
+
+                print(
+                    aviso
+                )
+
+
+        # =================================
+        # NOME DO ARQUIVO FINAL
+        # =================================
+
+        nome_original = os.path.basename(
+            arquivo.filename
+        )
+
+        nome_sem_extensao = os.path.splitext(
+            nome_original
+        )[0]
+
+        nome_saida = (
+            f"{nome_sem_extensao}"
+            "_LAYOUT_SERVA.csv"
+        )
+
+
+        caminho_saida = os.path.join(
+            PASTA_SAIDA,
+            nome_saida
+        )
+
+
+        # =================================
+        # GERA CSV FINAL
+        # =================================
+
+        try:
+
+            resultado.to_csv(
+                caminho_saida,
+                index=False,
+                sep=";",
+                encoding="utf-8-sig"
+            )
+
+        except PermissionError:
+
+            return (
+                "O arquivo de saída está aberto. "
+                "Feche o arquivo no Excel "
+                "e tente novamente."
+            )
+
+        except Exception as erro:
+
+            print(
+                "ERRO AO GERAR CSV SERVA:",
+                erro
+            )
+
+            return (
+                "Erro ao gerar o arquivo "
+                "final da SERVA: "
+                f"{erro}"
+            )
+
+
+        # =================================
+        # DOWNLOAD
+        # =================================
+
+        return send_file(
+            caminho_saida,
+            as_attachment=True,
+            download_name=nome_saida
+        )
+
+
+    # =====================================
+    # OUTRAS EMPRESAS
+    # AINDA NÃO CONFIGURADAS
+    # =====================================
+
+    return (
+        "Layout Final ainda não "
+        f"configurado para: {empresa}"
     )
 
 

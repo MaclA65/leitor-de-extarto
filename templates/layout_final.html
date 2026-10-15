@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block title %}
+Layout Final
+{% endblock %}
+
+{% block content %}
+
+<div class="container">
+
+    <h1>Layout Final</h1>
+
+    <p class="subtitulo">
+        Selecione a empresa para gerar o layout final
+    </p>
+
+    <div class="seletor-empresa">
+
+        <div class="barra-pesquisa">
+
+            <input
+                type="text"
+                id="pesquisaEmpresaLayout"
+                placeholder="Pesquisar empresa..."
+                autocomplete="off"
+            >
+
+        </div>
+
+        <div
+            class="lista-empresas"
+            id="listaEmpresasLayout"
+        >
+
+            <a
+                href="{{ url_for('layout_empresa', nome='serva') }}"
+                class="empresa-opcao"
+                data-nome="SERVA"
+            >
+                SERVA
+            </a>
+
+            <a
+                href="{{ url_for('layout_empresa', nome='casa_cuidados_itau') }}"
+                class="empresa-opcao"
+                data-nome="CASA DE CUIDADOS ITAU"
+            >
+                CASA DE CUIDADOS ITAU
+            </a>
+
+            <a
+                href="{{ url_for('layout_empresa', nome='ds') }}"
+                class="empresa-opcao"
+                data-nome="DS"
+            >
+                DS
+            </a>
+
+            <a
+                href="{{ url_for('layout_empresa', nome='alooh_midia') }}"
+                class="empresa-opcao"
+                data-nome="ALOOH MIDIA"
+            >
+                ALOOH MIDIA
+            </a>
+
+            <a
+                href="{{ url_for('layout_empresa', nome='casa_cuidados_bradesco') }}"
+                class="empresa-opcao"
+                data-nome="CASA DE CUIDADOS BRADESCO"
+            >
+                CASA DE CUIDADOS BRADESCO
+            </a>
+
+            <a
+                href="{{ url_for('layout_empresa', nome='globe') }}"
+                class="empresa-opcao"
+                data-nome="GLOBE"
+            >
+                GLOBE
+            </a>
+
+            <a
+                href="{{ url_for('layout_empresa', nome='nrg') }}"
+                class="empresa-opcao"
+                data-nome="NRG"
+            >
+                NRG
+            </a>
+
+            <a
+                href="{{ url_for('layout_empresa', nome='cibi') }}"
+                class="empresa-opcao"
+                data-nome="CIBI"
+            >
+                CIBI
+            </a>
+
+            <a
+                href="{{ url_for('layout_empresa', nome='cibi_aplicacao') }}"
+                class="empresa-opcao"
+                data-nome="CIBI APLICAÇÃO"
+            >
+                CIBI APLICAÇÃO
+            </a>
+
+            <a
+                href="{{ url_for('layout_empresa', nome='wooh_midia') }}"
+                class="empresa-opcao"
+                data-nome="WOOH MIDIA"
+            >
+                WOOH MIDIA
+            </a>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script src="{{ url_for('static', filename='tela.js') }}"></script>
+
+{% endblock %}

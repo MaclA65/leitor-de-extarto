@@ -1,0 +1,269 @@
+{% extends "base.html" %}
+
+{% block title %}
+Layout Final - {{ empresa.replace('_', ' ').upper() }}
+{% endblock %}
+
+
+{% block head %}
+
+<link
+    rel="stylesheet"
+    href="{{ url_for('static', filename='style.css') }}"
+>
+
+{% endblock %}
+
+
+{% block content %}
+
+<div class="container">
+
+    <h1>Layout Final</h1>
+
+    <p class="subtitulo">
+        Envie o extrato já lido e conferido
+    </p>
+
+
+    <div class="banco">
+
+        <span>
+            {{ empresa.replace('_', ' ').upper() }}
+        </span>
+
+    </div>
+
+
+    <form
+        action="{{ url_for('processar_layout') }}"
+        method="POST"
+        enctype="multipart/form-data"
+        id="formLayout"
+    >
+
+        <!-- EMPRESA ESCOLHIDA -->
+
+        <input
+            type="hidden"
+            name="empresa"
+            value="{{ empresa }}"
+        >
+
+
+        <!-- ÁREA DE UPLOAD -->
+
+        <div
+            class="upload-box"
+            id="uploadBoxLayout"
+        >
+
+            <div class="icone">
+                ↑
+            </div>
+
+
+            <h2>
+                Arraste o arquivo conferido aqui
+            </h2>
+
+
+            <p>
+                ou selecione o arquivo
+            </p>
+
+
+            <input
+                type="file"
+                id="arquivoLayout"
+                name="arquivo"
+                accept=".csv,.xls,.xlsx"
+                hidden
+                required
+            >
+
+
+            <button
+                type="button"
+                id="selecionarLayout"
+            >
+                Selecionar Arquivo
+            </button>
+
+
+            <p id="nomeArquivoLayout"></p>
+
+        </div>
+
+
+        <!-- BOTÃO -->
+
+        <button
+            type="submit"
+            class="processar"
+            id="processarLayout"
+            disabled
+        >
+            Gerar Layout Final
+        </button>
+
+    </form>
+
+
+    <div
+        class="resultado"
+        id="resultadoLayout"
+    >
+    </div>
+
+</div>
+
+
+<script>
+
+const uploadBoxLayout =
+    document.getElementById(
+        "uploadBoxLayout"
+    );
+
+
+const arquivoLayout =
+    document.getElementById(
+        "arquivoLayout"
+    );
+
+
+const selecionarLayout =
+    document.getElementById(
+        "selecionarLayout"
+    );
+
+
+const nomeArquivoLayout =
+    document.getElementById(
+        "nomeArquivoLayout"
+    );
+
+
+const processarLayout =
+    document.getElementById(
+        "processarLayout"
+    );
+
+
+// =====================================
+// BOTÃO SELECIONAR
+// =====================================
+
+selecionarLayout.addEventListener(
+    "click",
+    function() {
+
+        arquivoLayout.click();
+
+    }
+);
+
+
+// =====================================
+// ARQUIVO SELECIONADO
+// =====================================
+
+arquivoLayout.addEventListener(
+    "change",
+    function() {
+
+        if (
+            arquivoLayout.files.length > 0
+        ) {
+
+            nomeArquivoLayout.textContent =
+                arquivoLayout
+                    .files[0]
+                    .name;
+
+
+            processarLayout.disabled =
+                false;
+
+        } else {
+
+            nomeArquivoLayout.textContent =
+                "";
+
+
+            processarLayout.disabled =
+                true;
+
+        }
+
+    }
+);
+
+
+// =====================================
+// ARRASTAR ARQUIVO
+// =====================================
+
+uploadBoxLayout.addEventListener(
+    "dragover",
+    function(event) {
+
+        event.preventDefault();
+
+        uploadBoxLayout.classList.add(
+            "dragover"
+        );
+
+    }
+);
+
+
+uploadBoxLayout.addEventListener(
+    "dragleave",
+    function() {
+
+        uploadBoxLayout.classList.remove(
+            "dragover"
+        );
+
+    }
+);
+
+
+uploadBoxLayout.addEventListener(
+    "drop",
+    function(event) {
+
+        event.preventDefault();
+
+        uploadBoxLayout.classList.remove(
+            "dragover"
+        );
+
+
+        if (
+            event.dataTransfer.files.length > 0
+        ) {
+
+            arquivoLayout.files =
+                event.dataTransfer.files;
+
+
+            nomeArquivoLayout.textContent =
+                event.dataTransfer
+                    .files[0]
+                    .name;
+
+
+            processarLayout.disabled =
+                false;
+
+        }
+
+    }
+);
+
+</script>
+
+{% endblock %}

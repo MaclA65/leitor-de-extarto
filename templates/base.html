@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        {% block title %}
+        Sistema de Extratos
+        {% endblock %}
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+
+    {% block head %}
+    {% endblock %}
+
+</head>
+
+<body>
+
+    <!-- BOTÃO FLUTUANTE DO MENU -->
+    <button
+        type="button"
+        class="menu-btn"
+        id="abrirMenu"
+        aria-label="Abrir menu"
+    >
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+
+
+    <!-- MENU LATERAL -->
+    <aside
+        class="sidebar"
+        id="sidebar"
+    >
+
+        <div class="sidebar-topo">
+
+            <h2>
+                MENU
+            </h2>
+
+            <button
+                type="button"
+                class="fechar-menu"
+                id="fecharMenu"
+                aria-label="Fechar menu"
+            >
+                ×
+            </button>
+
+        </div>
+
+        <nav class="menu-links">
+
+            <a href="{{ url_for('inicio') }}">
+                Leitor de Extrato
+            </a>
+
+            <a href="{{ url_for('layout_final') }}">
+                Layout Final
+            </a>
+
+        </nav>
+
+    </aside>
+
+
+    <!-- FUNDO ESCURO -->
+    <div
+        class="overlay"
+        id="overlay"
+    ></div>
+
+
+    <!-- CONTEÚDO -->
+    <main class="conteudo">
+
+        {% block content %}
+        {% endblock %}
+
+    </main>
+
+
+    <!-- SCRIPT DO MENU -->
+    <script>
+
+        document.addEventListener(
+            "DOMContentLoaded",
+            function () {
+
+                const abrirMenu =
+                    document.getElementById(
+                        "abrirMenu"
+                    );
+
+                const fecharMenu =
+                    document.getElementById(
+                        "fecharMenu"
+                    );
+
+                const sidebar =
+                    document.getElementById(
+                        "sidebar"
+                    );
+
+                const overlay =
+                    document.getElementById(
+                        "overlay"
+                    );
+
+
+                function mostrarMenu() {
+
+                    sidebar.classList.add(
+                        "aberto"
+                    );
+
+                    overlay.classList.add(
+                        "ativo"
+                    );
+
+                }
+
+
+                function esconderMenu() {
+
+                    sidebar.classList.remove(
+                        "aberto"
+                    );
+
+                    overlay.classList.remove(
+                        "ativo"
+                    );
+
+                }
+
+
+                abrirMenu.addEventListener(
+                    "click",
+                    mostrarMenu
+                );
+
+
+                fecharMenu.addEventListener(
+                    "click",
+                    esconderMenu
+                );
+
+
+                overlay.addEventListener(
+                    "click",
+                    esconderMenu
+                );
+
+
+                document.addEventListener(
+                    "keydown",
+                    function (event) {
+
+                        if (
+                            event.key === "Escape"
+                        ) {
+
+                            esconderMenu();
+
+                        }
+
+                    }
+                );
+
+            }
+        );
+
+    </script>
+
+</body>
+
+</html>

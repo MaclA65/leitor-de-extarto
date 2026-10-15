@@ -1,51 +1,151 @@
-const pesquisaEmpresa =
-    document.getElementById("pesquisaEmpresa");
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
 
-const listaEmpresas =
-    document.getElementById("listaEmpresas");
+        configurarPesquisaEmpresas(
+            "pesquisaEmpresa",
+            "listaEmpresas"
+        );
 
-const empresas =
-    document.querySelectorAll(".empresa-opcao");
+        configurarPesquisaEmpresas(
+            "pesquisaEmpresaLayout",
+            "listaEmpresasLayout"
+        );
 
-
-pesquisaEmpresa.addEventListener("focus", () => {
-    listaEmpresas.classList.add("aberta");
-});
-
-
-pesquisaEmpresa.addEventListener("input", () => {
-
-    const texto =
-        pesquisaEmpresa.value
-            .toLowerCase()
-            .trim();
-
-    listaEmpresas.classList.add("aberta");
-
-    empresas.forEach((empresa) => {
-
-        const nome =
-            empresa.dataset.nome
-                .toLowerCase();
-
-        if (nome.includes(texto)) {
-            empresa.style.display = "block";
-        } else {
-            empresa.style.display = "none";
-        }
-
-    });
-
-});
+    }
+);
 
 
-document.addEventListener("click", (event) => {
+function configurarPesquisaEmpresas(
+    idPesquisa,
+    idLista
+) {
 
-    const seletor =
-        document.querySelector(".seletor-empresa");
+    const pesquisaEmpresa =
+        document.getElementById(
+            idPesquisa
+        );
 
-    if (!seletor.contains(event.target)) {
-        listaEmpresas.classList.remove("aberta");
+    const listaEmpresas =
+        document.getElementById(
+            idLista
+        );
+
+
+    if (
+        !pesquisaEmpresa
+        ||
+        !listaEmpresas
+    ) {
+
+        return;
+
     }
 
-});
+
+    const empresas =
+        listaEmpresas.querySelectorAll(
+            ".empresa-opcao"
+        );
+
+
+    // =====================================
+    // ABRE A LISTA AO CLICAR NA PESQUISA
+    // =====================================
+
+    pesquisaEmpresa.addEventListener(
+        "focus",
+        function () {
+
+            listaEmpresas.classList.add(
+                "aberta"
+            );
+
+        }
+    );
+
+
+    // =====================================
+    // FILTRA AS EMPRESAS
+    // =====================================
+
+    pesquisaEmpresa.addEventListener(
+        "input",
+        function () {
+
+            const texto =
+                pesquisaEmpresa.value
+                    .toLowerCase()
+                    .trim();
+
+
+            listaEmpresas.classList.add(
+                "aberta"
+            );
+
+
+            empresas.forEach(
+                function (empresa) {
+
+                    const nome =
+                        empresa
+                            .dataset
+                            .nome
+                            .toLowerCase();
+
+
+                    if (
+                        nome.includes(
+                            texto
+                        )
+                    ) {
+
+                        empresa.style.display =
+                            "block";
+
+                    } else {
+
+                        empresa.style.display =
+                            "none";
+
+                    }
+
+                }
+            );
+
+        }
+    );
+
+
+    // =====================================
+    // FECHA AO CLICAR FORA
+    // =====================================
+
+    document.addEventListener(
+        "click",
+        function (event) {
+
+            const seletor =
+                pesquisaEmpresa.closest(
+                    ".seletor-empresa"
+                );
+
+
+            if (
+                seletor
+                &&
+                !seletor.contains(
+                    event.target
+                )
+            ) {
+
+                listaEmpresas.classList.remove(
+                    "aberta"
+                );
+
+            }
+
+        }
+    );
+
+}

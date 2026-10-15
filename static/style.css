@@ -1,30 +1,271 @@
-/* =========================
+/* =========================================================
    CONFIGURAÇÃO GERAL
-   ========================= */
+   ========================================================= */
 
 * {
     box-sizing: border-box;
 }
 
+html,
 body {
     margin: 0;
+    padding: 0;
+    min-height: 100%;
+}
+
+body {
     font-family: Arial, sans-serif;
     background: #f4f6f8;
     color: #1f2937;
 }
 
 
-/* =========================
+/* =========================================================
+   BARRA SUPERIOR
+   ========================================================= */
+
+.topbar {
+    height: 64px;
+
+    display: flex;
+    align-items: center;
+
+    padding: 0 20px;
+
+    background: #ffffff;
+
+    border-bottom: 1px solid #e5e7eb;
+
+    box-shadow:
+        0 2px 8px rgba(0, 0, 0, 0.05);
+
+    position: sticky;
+    top: 0;
+
+    z-index: 1000;
+}
+
+
+/* =========================================================
+   BOTÃO DE MENU - TRÊS RISCOS
+   ========================================================= */
+
+.menu-btn {
+    width: 42px;
+    height: 42px;
+
+    padding: 8px;
+
+    margin-right: 14px;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+
+    gap: 5px;
+
+    border: none;
+    border-radius: 8px;
+
+    background: transparent;
+
+    cursor: pointer;
+
+    transition: 0.2s;
+}
+
+.menu-btn:hover {
+    background: #f1f5f9;
+}
+
+.menu-btn span {
+    display: block;
+
+    width: 24px;
+    height: 3px;
+
+    background: #1f2937;
+
+    border-radius: 3px;
+}
+
+
+/* =========================================================
+   TÍTULO DO SISTEMA NO TOPO
+   ========================================================= */
+
+.titulo-sistema {
+    font-size: 18px;
+    font-weight: 600;
+
+    color: #1f2937;
+}
+
+
+/* =========================================================
+   MENU LATERAL
+   ========================================================= */
+
+.sidebar {
+    position: fixed;
+
+    top: 0;
+    left: -270px;
+
+    width: 270px;
+    height: 100vh;
+
+    background: #10388f;
+
+    box-shadow:
+        4px 0 18px rgba(0, 0, 0, 0.22);
+
+    z-index: 2000;
+
+    transition:
+        left 0.25s ease;
+}
+
+.sidebar.aberto {
+    left: 0;
+}
+
+
+/* =========================================================
+   CABEÇALHO DO MENU
+   ========================================================= */
+
+.sidebar-topo {
+    height: 64px;
+
+    padding: 0 18px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    border-bottom:
+        1px solid rgba(255, 255, 255, 0.15);
+}
+
+.sidebar-topo h2 {
+    margin: 0;
+
+    font-size: 17px;
+    font-weight: 600;
+
+    color: #ffffff;
+}
+
+
+/* =========================================================
+   BOTÃO X DO MENU
+   ========================================================= */
+
+.fechar-menu {
+    width: 38px;
+    height: 38px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: none;
+    border-radius: 8px;
+
+    background: transparent;
+
+    color: #ffffff;
+
+    font-size: 28px;
+    line-height: 1;
+
+    cursor: pointer;
+
+    transition: 0.2s;
+}
+
+.fechar-menu:hover {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+
+/* =========================================================
+   LINKS DO MENU
+   ========================================================= */
+
+.menu-links {
+    padding: 18px 12px;
+}
+
+.menu-links a {
+    display: block;
+
+    padding: 14px 16px;
+
+    margin-bottom: 6px;
+
+    border-radius: 8px;
+
+    text-decoration: none;
+
+    color: #ffffff;
+
+    font-size: 15px;
+    font-weight: 500;
+
+    transition: 0.2s;
+}
+
+.menu-links a:hover {
+    background: rgba(255, 255, 255, 0.13);
+}
+
+
+/* =========================================================
+   FUNDO ESCURECIDO AO ABRIR MENU
+   ========================================================= */
+
+.overlay {
+    position: fixed;
+
+    inset: 0;
+
+    display: none;
+
+    background:
+        rgba(0, 0, 0, 0.25);
+
+    z-index: 1500;
+}
+
+.overlay.ativo {
+    display: block;
+}
+
+
+/* =========================================================
+   CONTEÚDO DAS PÁGINAS
+   ========================================================= */
+
+.conteudo {
+    min-height: calc(100vh - 64px);
+
+    padding: 20px;
+}
+
+
+/* =========================================================
    CONTAINER GERAL
-   ========================= */
+   ========================================================= */
 
 .container {
     width: 90%;
     max-width: 620px;
 
-    margin: 40px auto;
+    margin: 30px auto;
 
-    background: white;
+    background: #ffffff;
 
     padding: 32px;
 
@@ -35,37 +276,38 @@ body {
 }
 
 
-/* =========================
-   TITULOS
-   ========================= */
+/* =========================================================
+   TÍTULOS
+   ========================================================= */
 
 h1 {
     margin: 0;
+
     font-size: 30px;
 }
 
 .subtitulo {
-    color: #6b7280;
-
     margin-top: 8px;
     margin-bottom: 24px;
+
+    color: #6b7280;
 
     font-size: 15px;
 }
 
 
-/* =========================
+/* =========================================================
    SELETOR DE EMPRESA
-   ========================= */
+   ========================================================= */
 
 .seletor-empresa {
     position: relative;
 }
 
 
-/* =========================
+/* =========================================================
    BARRA DE PESQUISA
-   ========================= */
+   ========================================================= */
 
 .barra-pesquisa {
     display: flex;
@@ -73,12 +315,12 @@ h1 {
 
     width: 100%;
 
+    padding: 10px 14px;
+
     background: #ffffff;
 
     border: 1px solid #cbd5e1;
     border-radius: 14px;
-
-    padding: 10px 14px;
 
     box-shadow:
         0 2px 8px rgba(0, 0, 0, 0.05);
@@ -98,9 +340,9 @@ h1 {
 }
 
 
-/* =========================
+/* =========================================================
    LUPA
-   ========================= */
+   ========================================================= */
 
 .lupa-img {
     width: 26px;
@@ -114,12 +356,14 @@ h1 {
 }
 
 
-/* =========================
-   CAMPO DE PESQUISA
-   ========================= */
+/* =========================================================
+   INPUT DA PESQUISA
+   ========================================================= */
 
 .barra-pesquisa input {
     width: 100%;
+
+    padding: 6px 0;
 
     border: none;
     outline: none;
@@ -129,8 +373,6 @@ h1 {
     color: #1f2937;
 
     font-size: 16px;
-
-    padding: 6px 0;
 }
 
 .barra-pesquisa input::placeholder {
@@ -138,9 +380,9 @@ h1 {
 }
 
 
-/* =========================
-   LISTA SUSPENSA DE EMPRESAS
-   ========================= */
+/* =========================================================
+   LISTA DE EMPRESAS
+   ========================================================= */
 
 .lista-empresas {
     display: none;
@@ -148,6 +390,7 @@ h1 {
     position: absolute;
 
     top: calc(100% + 8px);
+
     left: 0;
     right: 0;
 
@@ -163,20 +406,22 @@ h1 {
     box-shadow:
         0 10px 25px rgba(0, 0, 0, 0.10);
 
-    z-index: 1000;
+    z-index: 1200;
 }
 
 
-/* QUANDO O JS ABRIR A LISTA */
+/* =========================================================
+   LISTA ABERTA PELO JAVASCRIPT
+   ========================================================= */
 
 .lista-empresas.aberta {
     display: block;
 }
 
 
-/* =========================
-   OPÇÃO DE EMPRESA
-   ========================= */
+/* =========================================================
+   EMPRESA
+   ========================================================= */
 
 .empresa-opcao {
     display: block;
@@ -206,9 +451,9 @@ h1 {
 }
 
 
-/* =========================
-   BARRA DE ROLAGEM DA LISTA
-   ========================= */
+/* =========================================================
+   SCROLL DA LISTA
+   ========================================================= */
 
 .lista-empresas::-webkit-scrollbar {
     width: 8px;
@@ -229,26 +474,25 @@ h1 {
 }
 
 
-/* =====================================================
-   TELA DO LEITOR DE EXTRATO
-   ===================================================== */
-
-
-/* =========================
-   BANCO
-   ========================= */
+/* =========================================================
+   IDENTIFICAÇÃO DA EMPRESA
+   ========================================================= */
 
 .banco {
     display: flex;
+    align-items: center;
     justify-content: space-between;
 
     padding: 15px 18px;
 
+    margin-bottom: 20px;
+
     background: #f9fafb;
 
+    border: 1px solid #eef2f7;
     border-radius: 10px;
 
-    margin-bottom: 20px;
+    font-weight: 600;
 }
 
 .banco strong {
@@ -256,24 +500,25 @@ h1 {
 }
 
 
-/* =========================
+/* =========================================================
    CAIXA DE UPLOAD
-   ========================= */
+   ========================================================= */
 
 .upload-box {
-    border: 2px dashed #cbd5e1;
-
-    border-radius: 14px;
-
     padding: 40px 20px;
 
     text-align: center;
+
+    border: 2px dashed #cbd5e1;
+    border-radius: 14px;
+
+    background: #ffffff;
 
     transition: 0.2s;
 }
 
 .upload-box:hover {
-    border-color: #002bec;
+    border-color: #1745dd;
 
     background: #f8faff;
 }
@@ -285,25 +530,26 @@ h1 {
 }
 
 
-/* =========================
+/* =========================================================
    ÍCONE UPLOAD
-   ========================= */
+   ========================================================= */
 
 .icone {
-    font-size: 42px;
-
     margin-bottom: 10px;
+
+    font-size: 42px;
 }
 
 
-/* =========================
-   TEXTO DO UPLOAD
-   ========================= */
+/* =========================================================
+   TEXTOS DO UPLOAD
+   ========================================================= */
 
 .upload-box h2 {
-    font-size: 20px;
-
+    margin-top: 0;
     margin-bottom: 5px;
+
+    font-size: 20px;
 }
 
 .upload-box p {
@@ -311,43 +557,64 @@ h1 {
 }
 
 
-/* =========================
-   BOTÕES GERAIS
-   ========================= */
+/* =========================================================
+   BOTÕES
+   ========================================================= */
 
 button {
     border: none;
 
     cursor: pointer;
 
+    font-family: inherit;
     font-size: 15px;
 }
 
 
-/* =========================
-   BOTÃO SELECIONAR PDF
-   ========================= */
+/* =========================================================
+   BOTÃO DE SELECIONAR ARQUIVO
+   LEITOR + LAYOUT FINAL
+   ========================================================= */
 
-#selecionar {
+#selecionar,
+#selecionarLayout {
     padding: 12px 22px;
 
     border-radius: 8px;
 
     background: #0d3ddd;
 
-    color: white;
+    color: #ffffff;
 
     transition: 0.2s;
 }
 
-#selecionar:hover {
+#selecionar:hover,
+#selecionarLayout:hover {
     background: #0b32b8;
 }
 
 
-/* =========================
+/* =========================================================
+   NOME DO ARQUIVO
+   ========================================================= */
+
+#nomeArquivo,
+#nomeArquivoLayout {
+    margin-top: 15px;
+
+    color: #374151;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    word-break: break-word;
+}
+
+
+/* =========================================================
    BOTÃO PROCESSAR
-   ========================= */
+   ========================================================= */
 
 .processar {
     width: 100%;
@@ -360,14 +627,14 @@ button {
 
     background: #111827;
 
-    color: white;
+    color: #ffffff;
 
     font-weight: bold;
 
     transition: 0.2s;
 }
 
-.processar:hover {
+.processar:hover:not(:disabled) {
     background: #1f2937;
 }
 
@@ -378,9 +645,9 @@ button {
 }
 
 
-/* =========================
+/* =========================================================
    RESULTADO
-   ========================= */
+   ========================================================= */
 
 .resultado {
     margin-top: 20px;
@@ -391,11 +658,29 @@ button {
 }
 
 
-/* =========================
+/* =========================================================
    RESPONSIVO
-   ========================= */
+   ========================================================= */
 
 @media (max-width: 700px) {
+
+    .topbar {
+        padding: 0 12px;
+    }
+
+    .titulo-sistema {
+        font-size: 16px;
+    }
+
+    .sidebar {
+        width: 250px;
+
+        left: -250px;
+    }
+
+    .conteudo {
+        padding: 12px;
+    }
 
     .container {
         width: 95%;
@@ -426,4 +711,112 @@ button {
         max-height: 250px;
     }
 
+    .upload-box {
+        padding: 30px 15px;
+    }
+
+}
+/* =========================
+   MENU HAMBURGUER SEM TOPO
+   ========================= */
+
+.menu-toggle {
+    position: fixed;
+    top: 18px;
+    left: 18px;
+    z-index: 2001;
+
+    width: 46px;
+    height: 46px;
+
+    border: none;
+    border-radius: 10px;
+
+    background: #ffffff;
+    color: #111827;
+
+    font-size: 28px;
+    line-height: 1;
+
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+
+    cursor: pointer;
+}
+
+.menu-toggle:hover {
+    background: #f3f4f6;
+}
+
+
+/* FUNDO ESCURO AO ABRIR MENU */
+.menu-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    z-index: 1998;
+    display: none;
+}
+
+.menu-overlay.ativo {
+    display: block;
+}
+
+
+/* MENU LATERAL */
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: -260px;
+
+    width: 250px;
+    height: 100vh;
+
+    background: #0f172a;
+    color: white;
+
+    padding: 80px 20px 20px 20px;
+
+    box-shadow: 4px 0 18px rgba(0, 0, 0, 0.18);
+
+    transition: left 0.25s ease;
+
+    z-index: 2000;
+}
+
+.sidebar.aberta {
+    left: 0;
+}
+
+.sidebar h2 {
+    margin-top: 0;
+    margin-bottom: 25px;
+    font-size: 22px;
+    color: white;
+}
+
+.sidebar a {
+    display: block;
+    color: white;
+    text-decoration: none;
+    padding: 12px 10px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    transition: 0.2s;
+}
+
+.sidebar a:hover {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+
+/* CONTEÚDO PRINCIPAL */
+.conteudo {
+    min-height: 100vh;
+    padding: 30px 20px;
+}
+
+
+/* AJUSTE DO CONTAINER PARA NÃO FICAR COLADO NO BOTÃO */
+.container {
+    margin-top: 60px;
 }
