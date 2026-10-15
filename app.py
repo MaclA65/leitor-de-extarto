@@ -14,6 +14,7 @@ from cibi_aplicacao import ler_cibi_aplicacao
 from layout_serva import gerar_layout_serva
 from layout_casa_cuidados_itau import gerar_layout_casa_cuidados_itau
 from layout_ds import gerar_layout_ds
+from layout_alooh_midia import gerar_layout_alooh_midia
 
 import os
 import shutil
@@ -985,6 +986,159 @@ def processar_layout():
             PASTA_SAIDA,
             nome_saida
         )
+        
+             # =====================================
+    # ALOOH MIDIA - BRADESCO
+    # =====================================
+
+    if empresa == "alooh_midia":
+
+        print(
+            "GERANDO LAYOUT FINAL ALOOH MIDIA"
+        )
+
+        try:
+
+            resultado = gerar_layout_alooh_midia(
+                caminho_arquivo
+            )
+
+        except Exception as erro:
+
+            print(
+                "ERRO NO LAYOUT ALOOH MIDIA:",
+                erro
+            )
+
+            return (
+                "Erro durante a geração "
+                "do Layout Final da ALOOH MIDIA: "
+                f"{erro}"
+            )
+
+
+        # =================================
+        # VALIDA RESULTADO
+        # =================================
+
+        if resultado is None:
+
+            return (
+                "O Layout ALOOH MIDIA não retornou "
+                "nenhum resultado."
+            )
+
+
+        if resultado.empty:
+
+            return (
+                "Nenhum lançamento foi gerado "
+                "no Layout Final da ALOOH MIDIA."
+            )
+
+
+        # =================================
+        # CONFERÊNCIA NO TERMINAL
+        # =================================
+
+        print(
+            "DÉBITOS:",
+            resultado.attrs.get(
+                "quantidade_debitos",
+                0
+            )
+        )
+
+        print(
+            "CRÉDITOS:",
+            resultado.attrs.get(
+                "quantidade_creditos",
+                0
+            )
+        )
+
+        print(
+            "TOTAL:",
+            resultado.attrs.get(
+                "quantidade_total",
+                len(resultado)
+            )
+        )
+
+
+        # =================================
+        # NOME DO ARQUIVO FINAL
+        # =================================
+
+        nome_original = os.path.basename(
+            arquivo.filename
+        )
+
+        nome_sem_extensao = os.path.splitext(
+            nome_original
+        )[0]
+
+        nome_saida = (
+            f"{nome_sem_extensao}"
+            "_LAYOUT_ALOOH_MIDIA.csv"
+        )
+
+
+        caminho_saida = os.path.join(
+            PASTA_SAIDA,
+            nome_saida
+        )
+
+
+        # =================================
+        # GERA CSV FINAL
+        # =================================
+
+        try:
+
+            resultado.to_csv(
+                caminho_saida,
+                index=False,
+                sep=";",
+                encoding="utf-8-sig"
+            )
+
+        except PermissionError:
+
+            return (
+                "O arquivo de saída está aberto. "
+                "Feche o arquivo no Excel "
+                "e tente novamente."
+            )
+
+        except Exception as erro:
+
+            print(
+                "ERRO AO GERAR CSV ALOOH MIDIA:",
+                erro
+            )
+
+            return (
+                "Erro ao gerar o arquivo "
+                "final da ALOOH MIDIA: "
+                f"{erro}"
+            )
+
+
+        # =================================
+        # DOWNLOAD
+        # =================================
+
+        return send_file(
+            caminho_saida,
+            as_attachment=True,
+            download_name=nome_saida
+        )
+
+
+
+
+
 
 
         # =================================
